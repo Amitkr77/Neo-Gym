@@ -11,6 +11,7 @@ import config from "./src/config/config.js";
 import authRoutes from './src/routes/authRoutes.js';
 import cors from "cors";
 import adminRoutes from './src/routes/adminRoutes.js'
+import contactRoutes from './src/routes/contactRoutes.js'
 
 dotenv.config({ path: "./.env" });
 
@@ -48,6 +49,7 @@ app.use('/api/equipment', equipementRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/task', taskRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', contactRoutes);
 
 // Basic Route
 app.get('/', (req, res) => {

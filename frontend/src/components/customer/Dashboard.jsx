@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TfiAnnouncement } from "react-icons/tfi";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import FRONTEND_URL from "../../constant/const";
 
 export default function Dashboard() {
   const [announcement, setAnnouncements] = useState("");
@@ -11,7 +12,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const res = await axios.get("http://localhost:7002/api/announcement");
+        const res = await axios.get(`${FRONTEND_URL}/api/announcement`);
         setAnnouncements(res.data.data);
       } catch (error) {
         console.log(error.message || "An error occurred while fetching data.");
@@ -20,7 +21,7 @@ export default function Dashboard() {
 
     const fetchTasks = async () => {
       try {
-        const response = await axios.get("http://localhost:7002/api/task"); // Replace with your backend API URL
+        const response = await axios.get(`${FRONTEND_URL}/api/task`); // Replace with your backend API URL
         setTasks(response.data);
       } catch (error) {
         console.error("Error fetching tasks:", error);
@@ -43,7 +44,7 @@ export default function Dashboard() {
   const handleRemoveTask = async (taskId) => {
     try {
       const response = await axios.delete(
-        `http://localhost:7002/api/task/${taskId}`
+        `${FRONTEND_URL}/api/task/${taskId}`
       ); // Replace with your delete endpoint
       setTasks(tasks.filter((task) => task._id !== taskId)); // Remove task from state
       setStatusMessage("Task removed successfully!");

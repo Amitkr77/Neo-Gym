@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import FRONTEND_URL from "../../constant/const";
 
 const Modal = ({ user, setIsModalOpen }) => {
   const [formData, setFormData] = useState(user);
@@ -31,7 +32,7 @@ const Modal = ({ user, setIsModalOpen }) => {
       };
       const id = localStorage.getItem("userId");
 
-      await axios.put(`http://localhost:7002/api/member/users/${id}`, updatedData);
+      await axios.put(`${FRONTEND_URL}/api/member/users/${id}`, updatedData);
       alert("User details updated successfully");
       setIsModalOpen(false);
     } catch (error) {

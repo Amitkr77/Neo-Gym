@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import FRONTEND_URL from "../../../constant/const";
 
 export default function MemberEntryForm() {
   const [selectedService, setSelectedService] = useState("");
@@ -105,7 +106,7 @@ export default function MemberEntryForm() {
 
     try {
       const response = await axios.post(
-        "http://localhost:7002/api/member/users",
+        `${FRONTEND_URL}/api/member/users`,
         dataToSubmit,
         {
           headers: {

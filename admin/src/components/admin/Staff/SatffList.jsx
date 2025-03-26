@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import Modal from "react-modal";
 import { Link } from "react-router-dom";
+import FRONTEND_URL from "../../../../../frontend/src/constant/const";
 
 Modal.setAppElement('#root'); // Required for accessibility - set root element for the modal
 
@@ -17,7 +18,7 @@ export default function StaffList() {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const { data } = await axios.get("http://localhost:7002/api/staff");
+        const { data } = await axios.get(`${FRONTEND_URL}/api/staff`);
         setStaff(data);
       } catch (error) {
         setError("Something went wrong while fetching staff data.");
@@ -32,7 +33,7 @@ export default function StaffList() {
     try {
       const confirmDelete = window.confirm("Are you sure you want to delete this staff member?");
       if (confirmDelete) {
-        await axios.delete(`http://localhost:7002/api/staff/${staffId}`);
+        await axios.delete(`${FRONTEND_URL}/api/staff/${staffId}`);
         setStaff(staff.filter((member) => member._id !== staffId));
         alert("Staff member deleted successfully.");
       }
@@ -68,7 +69,7 @@ export default function StaffList() {
 
     try {
       const { _id, ...updatedData } = editStaffData;
-      await axios.put(`http://localhost:7002/api/staff/${_id}`, updatedData);
+      await axios.put(`${FRONTEND_URL}/api/staff/${_id}`, updatedData);
       setStaff((prevStaff) =>
         prevStaff.map((member) =>
           member._id === _id ? { ...member, ...updatedData } : member

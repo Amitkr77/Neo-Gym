@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import axios from "axios";
+import FRONTEND_URL from "../../../constant/const";
 
 export function EquipmentInfoForm() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    purchasedDate: "",  // Change 'date' to 'purchasedDate'
-    qty: "",  // Change 'quantity' to 'qty'
+    purchasedDate: "", // Change 'date' to 'purchasedDate'
+    qty: "", // Change 'quantity' to 'qty'
     vendor: "",
     address: "",
     contact: "",
@@ -34,7 +35,10 @@ export function EquipmentInfoForm() {
     setSuccess(null);
 
     try {
-      const response = await axios.post("http://localhost:7002/api/equipment", formData);
+      const response = await axios.post(
+        `${FRONTEND_URL}/api/equipment`,
+        formData
+      );
       setSuccess("Equipment successfully added!");
       setFormData({
         name: "",
@@ -66,10 +70,11 @@ export function EquipmentInfoForm() {
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
             {/* Equipment Info Section */}
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Equipment Name:</label>
+              <label className="block text-sm font-medium mb-1">
+                Equipment Name:
+              </label>
               <input
                 type="text"
                 name="name"
@@ -82,7 +87,9 @@ export function EquipmentInfoForm() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Description:</label>
+              <label className="block text-sm font-medium mb-1">
+                Description:
+              </label>
               <input
                 type="text"
                 name="description"
@@ -95,22 +102,28 @@ export function EquipmentInfoForm() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Date of Purchase:</label>
+              <label className="block text-sm font-medium mb-1">
+                Date of Purchase:
+              </label>
               <input
                 type="date"
-                name="purchasedDate"  // Change 'date' to 'purchasedDate'
+                name="purchasedDate" // Change 'date' to 'purchasedDate'
                 value={formData.purchasedDate}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded p-2"
               />
-              <span className="text-xs text-gray-500">Please mention the date of purchase</span>
+              <span className="text-xs text-gray-500">
+                Please mention the date of purchase
+              </span>
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Quantity:</label>
+              <label className="block text-sm font-medium mb-1">
+                Quantity:
+              </label>
               <input
                 type="number"
-                name="qty"  // Change 'quantity' to 'qty'
+                name="qty" // Change 'quantity' to 'qty'
                 value={formData.qty}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded p-2"
@@ -149,7 +162,9 @@ export function EquipmentInfoForm() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Contact Number:</label>
+              <label className="block text-sm font-medium mb-1">
+                Contact Number:
+              </label>
               <input
                 type="text"
                 name="contact"
@@ -165,7 +180,9 @@ export function EquipmentInfoForm() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Cost Per Item:</label>
+              <label className="block text-sm font-medium mb-1">
+                Cost Per Item:
+              </label>
               <div className="flex items-center">
                 <span className="text-sm font-medium">$</span>
                 <input

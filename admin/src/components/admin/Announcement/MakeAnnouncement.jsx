@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import FRONTEND_URL from "../../../constant/const";
 
 const MakeAnnouncement = () => {
   // Step 1: Set up state to manage form data
@@ -25,7 +26,10 @@ const MakeAnnouncement = () => {
 
     try {
       // Step 3: Send POST request using Axios
-      const response = await axios.post("http://localhost:7002/api/announcement", data);
+      const response = await axios.post(
+        `${FRONTEND_URL}/api/announcement`,
+        data
+      );
 
       // Handle successful submission
       setSuccessMessage("Announcement published successfully!");

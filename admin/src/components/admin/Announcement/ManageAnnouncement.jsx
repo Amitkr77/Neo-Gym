@@ -1,7 +1,8 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import FRONTEND_URL from "../../../constant/const";
 
-const API_URL = "http://localhost:7002/api/announcement";
+const API_URL = `${FRONTEND_URL}/api/announcement`;
 
 export default function ManageAnnouncement() {
   const [announcements, setAnnouncements] = useState([]);
@@ -35,7 +36,7 @@ export default function ManageAnnouncement() {
   // Handle delete request
   const handleDelete = async (_id) => {
     try {
-      await axios.delete(`http://localhost:7002/api/announcement/${_id}`);
+      await axios.delete(`${FRONTEND_URL}/api/announcement/${_id}`);
       // Directly update state to avoid stale closures
       setAnnouncements((prevAnnouncements) =>
         prevAnnouncements.filter((announcement) => announcement._id !== _id)

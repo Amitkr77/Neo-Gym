@@ -5,6 +5,7 @@ import { FaSignInAlt } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify"; // Importing toast
+import FRONTEND_URL from "../../constant/const";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
@@ -20,7 +21,7 @@ const LoginPage = () => {
     setLoading(true);
     
     try {
-      const res = await axios.post("http://localhost:7002/api/auth/login", formData);
+      const res = await axios.post(`${FRONTEND_URL}/api/auth/login`, formData);
 
       if (res.status === 200 && res.data.token) {
         const { token, userId } = res.data;
@@ -100,6 +101,9 @@ const LoginPage = () => {
           >
             {loading ? <span>Loading...</span> : <><FaSignInAlt className="inline mr-2" />Login</>}
           </motion.button>
+          <Link >
+          forget password
+          </Link>
         </form>
       </motion.div>
     </div>

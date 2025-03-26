@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import FRONTEND_URL from "../../../../../frontend/src/constant/const";
 
 export function EquipmentManagement() {
   const [equipmentData, setEquipmentData] = useState([]);
@@ -14,7 +15,7 @@ export function EquipmentManagement() {
       setLoading(true);
       setError(null);
       try {
-        const res = await axios.get("http://localhost:7002/api/equipment");
+        const res = await axios.get(`${FRONTEND_URL}/api/equipment`);
         if (res.data.data && Array.isArray(res.data.data)) {
           setEquipmentData(res.data.data); // Set equipment data
         } else {
@@ -44,7 +45,7 @@ export function EquipmentManagement() {
         "Are you sure you want to delete this equipment?"
       );
       if (confirmDelete) {
-        await axios.delete(`http://localhost:7002/api/equipment/${_id}`);
+        await axios.delete(`${FRONTEND_URL}/api/equipment/${_id}`);
         // Remove deleted equipment from state
         setEquipmentData((prevData) =>
           prevData.filter((item) => item._id !== _id)
@@ -70,12 +71,12 @@ export function EquipmentManagement() {
       try {
         // Send updated data to the API
         await axios.put(
-          `http://localhost:7002/api/equipment/${editingEquipment._id}`,
+          `${FRONTEND_URL}/api/equipment/${editingEquipment._id}`,
           editingEquipment
         );
 
         // Refresh equipment data after updating
-        const res = await axios.get("http://localhost:7002/api/equipment");
+        const res = await axios.get(`${FRONTEND_URL}/api/equipment`);
         setEquipmentData(res.data.data);
 
         // Close the modal after successful update

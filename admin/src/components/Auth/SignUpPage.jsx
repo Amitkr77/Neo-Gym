@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import FRONTEND_URL from "../../constant/const";
 
 const SignUpPage = () => {
   const [fullname, setfullname] = useState("");
@@ -35,7 +36,7 @@ const SignUpPage = () => {
     };
 
     try {
-      const res = await axios.post("http://localhost:7002/api/admin/register", userDetails, {
+      const res = await axios.post(`${FRONTEND_URL}/api/admin/register`, userDetails, {
         headers: {
           "Content-Type": "application/json",
         },

@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { TfiAnnouncement } from "react-icons/tfi";
+import FRONTEND_URL from "../../constant/const";
 
 export default function Annoucements() {
   const [announcement, setAnnouncements] = useState("");
@@ -8,7 +9,7 @@ export default function Annoucements() {
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const res = await axios.get("http://localhost:7002/api/announcement");
+        const res = await axios.get(`${FRONTEND_URL}/api/announcement`);
         setAnnouncements(res.data.data);
       } catch (error) {
         console.log(error.message || "An error occurred while fetching data.");

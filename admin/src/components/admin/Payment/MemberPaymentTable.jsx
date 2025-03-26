@@ -1,27 +1,29 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import FRONTEND_URL from "../../../../../frontend/src/constant/const";
 
 const MemberPaymentTable = () => {
   // State variables
   const [paymentData, setPaymentData] = useState([]);
-  const [loading, setLoading] = useState(true); // For handling loading state
-  const [error, setError] = useState(null); // For handling errors
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [reminders, setReminders] = useState({}); // Track reminder status for each member
 
   // Fetch payment data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:7002/api/payment/");
+        const res = await axios.get(`${FRONTEND_URL}/api/payment/`);
         setPaymentData(res.data.payments || []); // Assuming the API sends an object with payments
         setLoading(false);
-        
       } catch (error) {
         console.log(error.message);
         setError("Failed to load payment data. Please try again.");
         setLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
@@ -29,6 +31,22 @@ const MemberPaymentTable = () => {
   const formatDate = (dateString) => {
     const date = new Date(dateString); // Convert ISO string to Date object
     return date.toLocaleDateString("en-GB"); // Format as DD/MM/YYYY (or change locale to suit)
+  };
+
+  // Toggle reminder status for a specific member
+  const toggleReminder = async (memberId, value) => {
+    try {
+      // Send the update request to the backend API
+      const response = await axios.put(`${FRONTEND_URL}/api/member/users/${memberId}/reminder`, {
+        reminder: value,
+      });
+      setReminders((prevReminders) => ({
+        ...prevReminders,
+        [memberId]: response.data.reminder, // Update reminder status for the specific member
+      }));
+    } catch (error) {
+      console.error("Error updating reminder:", error);
+    }
   };
 
   // Handle search logic (optional)
@@ -50,9 +68,7 @@ const MemberPaymentTable = () => {
   return (
     <div className="bg-white shadow-md rounded-lg p-6">
       <div className="flex justify-between items-center mb-4">
-        <h5 className="text-lg font-semibold text-gray-800">
-          Member's Payment Table
-        </h5>
+        <h5 className="text-lg font-semibold text-gray-800">Member's Payment Table</h5>
         <form onSubmit={handleSearchSubmit} className="flex items-center">
           <input
             type="text"
@@ -88,47 +104,26 @@ const MemberPaymentTable = () => {
             {paymentData.length > 0 ? (
               paymentData.map((payment, index) => (
                 <tr key={payment._id} className="hover:bg-gray-50 capitalize">
+                  <td className="text-center py-2 px-4 border-b">{index + 1}</td>
+                  <td className="text-center py-2 px-4 border-b">{payment.member.fullName}</td>
+                  <td className="text-center py-2 px-4 border-b">{formatDate(payment.paymentDate)}</td>
+                  <td className="text-center py-2 px-4 border-b">{payment.amountPaid}</td>
+                  <td className="text-center py-2 px-4 border-b">{payment.chosenService}</td>
+                  <td className="text-center py-2 px-4 border-b">{payment.plan}</td>
                   <td className="text-center py-2 px-4 border-b">
-                    {index + 1}
-                  </td>
-                  <td className="text-center py-2 px-4 border-b">
-                    {payment.member.fullName}
-                  </td>
-                  <td className="text-center py-2 px-4 border-b">
-                    {formatDate(payment.paymentDate)}
-                  </td>
-                  <td className="text-center py-2 px-4 border-b">
-                    {payment.amountPaid}
-                  </td>
-                  <td className="text-center py-2 px-4 border-b">
-                    {payment.chosenService}
-                  </td>
-                  <td className="text-center py-2 px-4 border-b">
-                    {payment.plan}
-                  </td>
-                  <td className="text-center py-2 px-4 border-b">
-                    <Link
-                      to="/admin/payment/PaymentForm"
-                      state={{ data: payment }}
-                    >
+                    <Link to="/admin/payment/PaymentForm" state={{ data: payment }}>
                       <button className="px-3 py-1 rounded-md hover:bg-green-600 bg-green-500 text-white">
                         Make Payment
                       </button>
                     </Link>
                   </td>
-                  <td className="text-center py-2 px-4 border-b ">
-                    <a>
-                      <button
-                        className={`px-3 py-1 rounded-md hover:bg-red-600 bg-red-500 text-white ${
-                          payment.alertDisabled
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
-                        }`}
-                        disabled={payment.alertDisabled}
-                      >
-                        Alert
-                      </button>
-                    </a>
+                  <td className="text-center py-2 px-4 border-b">
+                    <button
+                      className={`px-3 py-1 rounded-md ${reminders[payment.member._id] ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white`}
+                      onClick={() => toggleReminder(payment.member._id, !reminders[payment.member._id])}
+                    >
+                      {reminders[payment.member._id] ? 'Cancel Alert' : 'Set Alert'}
+                    </button>
                   </td>
                 </tr>
               ))

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import FRONTEND_URL from '../../../../../frontend/src/constant/const';
 
 const StaffAdd = () => {
   const [formData, setFormData] = useState({
@@ -66,7 +67,7 @@ const StaffAdd = () => {
 
     try {
       // Send form data to backend
-      const response = await axios.post('http://localhost:7002/api/staff', requestData);
+      const response = await axios.post(`${FRONTEND_URL}/api/staff`, requestData);
       console.log('Staff added successfully:', response.data);
       // Optionally clear the form after submission
       setFormData({

@@ -9,18 +9,18 @@ import { TfiAnnouncement } from "react-icons/tfi";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useEffect } from "react";
+import FRONTEND_URL from "../../../../frontend/src/constant/const";
 function DashBorad() {
   const [member, setMember] = useState("");
   const [announcement, setAnnouncements] = useState("");
   const [tasks, setTasks] = useState([]); // State to store tasks
   const [statusMessage, setStatusMessage] = useState(""); // To show status messages
+  const [reqInfo, setReqInfo] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:7002/api/member/users"
-        );
+        const response = await axios.get(`${FRONTEND_URL}/api/member/users`);
         setMember(response.data.length);
       } catch (error) {
         console.log(error.message || "An error occurred while fetching data.");
@@ -29,7 +29,7 @@ function DashBorad() {
 
     const fetchAnnouncements = async () => {
       try {
-        const res = await axios.get("http://localhost:7002/api/announcement");
+        const res = await axios.get(`${FRONTEND_URL}/api/announcements`);
         setAnnouncements(res.data.data);
       } catch (error) {
         console.log(error.message || "An error occurred while fetching data.");
@@ -38,7 +38,7 @@ function DashBorad() {
 
     const fetchTasks = async () => {
       try {
-        const response = await axios.get("http://localhost:7002/api/task"); // Replace with your backend API URL
+        const response = await axios.get(`${FRONTEND_URL}/api/task`);
         setTasks(response.data);
       } catch (error) {
         console.error("Error fetching tasks:", error);
@@ -46,6 +46,24 @@ function DashBorad() {
       }
     };
 
+    const fetchContactForms = async () => {
+      try {
+        const response = await fetch(`${FRONTEND_URL}/api/contact`);
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log(result.data); // Result contains the list of submissions
+          // You can then set the fetched data into your state to display it
+          setReqInfo(result.data);
+        } else {
+          console.error("Failed to fetch contact forms:", result.message);
+        }
+      } catch (error) {
+        console.error("Error fetching contact forms:", error);
+      }
+    };
+
+    fetchContactForms();
     fetchTasks();
     fetchAnnouncements();
     fetchUsers();
@@ -60,9 +78,7 @@ function DashBorad() {
   // Handle task removal
   const handleRemoveTask = async (taskId) => {
     try {
-      const response = await axios.delete(
-        `http://localhost:7002/api/task/${taskId}`
-      ); // Replace with your delete endpoint
+      const response = await axios.delete(`${FRONTEND_URL}/api/task/${taskId}`); // Replace with your delete endpoint
       setTasks(tasks.filter((task) => task._id !== taskId)); // Remove task from state
       setStatusMessage("Task removed successfully!");
     } catch (error) {
@@ -139,100 +155,68 @@ function DashBorad() {
       {/* Fifth section starts here */}
       <div className="flex ">
         <section className="w-full p-2 border-t">
-          <div className="mx-auto p-6 bg-white rounded-lg shadow-lg">
+          <div className="mx-auto max-w-7xl p-6 bg-white rounded-lg shadow-2xl">
             <div className="flex items-center space-x-3 mb-6">
-              <span className="text-blue-500 text-2xl">
-                <i className="fas fa-clock"></i> {/* Icon for To-Do List */}
+              <span className="text-blue-600 text-3xl">
+                <i className="fas fa-info-circle"></i>{" "}
+                {/* Icon for Request Info */}
               </span>
-              <h5 className="text-xl font-semibold text-gray-800">
-                My To-Do List
+              <h5 className="text-3xl font-semibold text-gray-800">
+                Request Information
               </h5>
             </div>
 
-            <div className="overflow-x-auto bg-gray-50 rounded-lg shadow-sm">
-              <table className="min-w-full table-auto">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      Description
-                    </th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      Status
-                    </th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                      Opts
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tasks.length > 0 ? (
-                    tasks.map((task) => (
-                      <tr key={task._id} className="hover:bg-gray-100">
-                        <td className="px-4 py-2 flex items-center space-x-2 text-sm text-gray-700">
-                          <a
-                            href="#!"
-                            onClick={() => handleUpdateTask(task._id)}
-                            className="text-blue-500 hover:text-blue-700"
-                          >
-                            <i className="fas fa-plus-circle"></i>
-                          </a>
-                          <span>{task.taskDesc}</span>
-                        </td>
-                        <td className="px-4 py-2 text-sm text-gray-700">
-                          <span
-                            className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                              task.taskStatus === "In Progress"
-                                ? "bg-blue-100 text-blue-600"
-                                : "bg-yellow-100 text-yellow-600"
-                            }`}
-                          >
-                            {task.taskStatus}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-sm space-x-3">
-                          <a
-                            href="#!"
-                            className="text-yellow-500 hover:text-yellow-700"
-                            onClick={() => handleUpdateTask(task._id)}
-                            title="Update"
-                          >
-                            <i className="fas fa-edit"></i>
-                          </a>
-                          <a
-                            href="#!"
-                            className="text-green-500 hover:text-green-700"
-                            onClick={() => handleRemoveTask(task._id)}
-                            title="Mark as Done"
-                          >
-                            <input type="checkbox" name="" id="" />
-                          </a>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan="3"
-                        className="px-4 py-2 text-center text-gray-500"
-                      >
-                        No tasks available.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {statusMessage && (
-              <div
-                id="status"
-                className="mt-4 p-3 bg-green-100 text-green-700 text-sm rounded-lg"
-              >
-                {statusMessage}
+            {reqInfo.length === 0 ? (
+              <div className="text-center py-6 text-gray-400 text-lg">
+                No request information found.
               </div>
+            ) : (
+              reqInfo.map((request, index) => (
+                <div
+                  key={index}
+                  className="mb-8 p-6 bg-white rounded-2xl shadow-lg hover:shadow-2xl "
+                >
+                  <div className="flex gap-4">
+                    {/* Full Name */}
+                    <div className="flex flex-col bg-blue-100 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+                      <h6 className="text-lg font-semibold text-blue-700">
+                        Full Name
+                      </h6>
+                      <p className="text-gray-700">
+                        {request.firstName} {request.lastName}
+                      </p>
+                    </div>
+
+                    {/* Email */}
+                    <div className="flex flex-col  bg-green-100 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+                      <h6 className="text-lg font-semibold text-green-700">
+                        Email
+                      </h6>
+                      <p className="text-gray-700">{request.email}</p>
+                    </div>
+                  </div>
+
+                  {/* Message Section */}
+                  <div className="mt-6 p-6 bg-gray-100 rounded-2xl shadow-sm transition-all duration-500 transform hover:scale-105">
+                    <h6 className="text-lg font-semibold text-gray-700">
+                      Message
+                    </h6>
+                    <p className="text-gray-700">{request.message}</p>
+                  </div>
+
+                  {/* Date Section */}
+                  <div className="mt-4 text-gray-500 text-sm ">
+                    <p>
+                      <strong>Requested At:</strong>{" "}
+                      {new Date(request.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </section>
+
         <section className="w-full p-2 border-t">
           <div className="w-full  p-6 bg-white rounded-lg shadow-lg  ">
             <div className="flex items-center gap-2 border-b pb-2 mb-4">
@@ -242,7 +226,7 @@ function DashBorad() {
               </h1>
             </div>
 
-            <div className="overflow-y-auto bg-gray-800 rounded-lg shadow-sm p-3 space-y-3">
+            <div className="overflow-auto bg-gray-800 rounded-lg shadow-sm p-6 space-y-3">
               {announcement.length === 0 ? (
                 <div className="text-center py-3 text-gray-400 text-sm">
                   No announcements found.
@@ -251,7 +235,7 @@ function DashBorad() {
                 announcement.map((announcement, index) => (
                   <div
                     key={index}
-                    className="flex justify-between items-center p-3 rounded-md bg-[#2d2f39] hover:bg-[#3e434d] transition-all duration-200"
+                    className="flex justify-between items-center p-3 rounded-md bg-[#2d2f39] hover:bg-[#3e434d] transition-all duration-500 transform hover:scale-105"
                   >
                     <div className="flex gap-2 items-center">
                       {/* Icon */}

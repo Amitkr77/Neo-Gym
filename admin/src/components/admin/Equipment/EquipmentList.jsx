@@ -7,6 +7,7 @@ import {
 } from "@material-tailwind/react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import FRONTEND_URL from "../../../constant/const";
 
 // Sample data for the equipment table
 const EQUIPMENT_TABLE_HEAD = [
@@ -33,7 +34,7 @@ export function EquipmentList() {
       setError(null); // Reset error state
 
       try {
-        const res = await axios.get("http://localhost:7002/api/equipment");
+        const res = await axios.get(`${FRONTEND_URL}/api/equipment`);
         if (res.data.data && Array.isArray(res.data.data)) {
           setEquipmentData(res.data.data); // Set data on success
         } else {

@@ -41,7 +41,7 @@ export function RegisteredMembers() {
     const fetchUsers = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:7002/api/member/users"
+          `${FRONTEND_URL}/api/member/users`
         );
         setUsers(response.data);
       } catch (error) {

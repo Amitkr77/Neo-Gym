@@ -13,6 +13,7 @@ import { MdCurrencyRupee } from "react-icons/md";
 import { SlUserFollowing } from "react-icons/sl";
 import { RiTodoLine } from "react-icons/ri";
 import axios from "axios";
+import FRONTEND_URL from "../../../constant/const";
 
 export default function ChartConfig() {
   const [staffData, setStaffData] = useState("");
@@ -106,7 +107,7 @@ export default function ChartConfig() {
   useEffect(() => {
     const fetchStaff = async () => {
       try {
-        const res = await axios.get("http://localhost:7002/api/staff");
+        const res = await axios.get(`${FRONTEND_URL}/api/staff`);
         setStaffData(res.data.length);
       } catch (error) {
         console.log(error);
@@ -115,7 +116,7 @@ export default function ChartConfig() {
 
     const fetchMember = async () => {
       try {
-        const res = await axios.get("http://localhost:7002/api/member/users");
+        const res = await axios.get(`${FRONTEND_URL}/api/member/users`);
         setMemberData(res.data.length);
       } catch (error) {
         console.log(error);
@@ -124,7 +125,7 @@ export default function ChartConfig() {
 
     const fetchEquipment = async() =>{
       try {
-        const res =  await axios.get("http://localhost:7002/api/equipment");
+        const res =  await axios.get(`${FRONTEND_URL}/api/equipment`);
         setEquipmentData(res.data.data.length)
       } catch (error) {
         console.log(error);

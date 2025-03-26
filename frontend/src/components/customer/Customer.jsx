@@ -8,6 +8,7 @@ import Annoucements from "./Annoucements";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import Modal from "./Modal";
+import FRONTEND_URL from "../../constant/const";
 
 export default function Customer() {
   const [user, setUser] = useState(null);
@@ -32,7 +33,7 @@ export default function Customer() {
       const id = localStorage.getItem("userId");
       try {
         const response = await axios.get(
-          `http://localhost:7002/api/member/users/${id}`
+          `${FRONTEND_URL}/api/member/users/${id}`
         );
         setUser(response.data);
         console.log(user);
@@ -76,11 +77,11 @@ export default function Customer() {
                 Annoucements
               </li>
             </Link>
-            <Link to="/Customer/Reports">
+            {/* <Link to="/Customer/Reports">
               <li className="flex items-center w-full text-left py-2 px-4 rounded hover:bg-gray-700 transition duration-200">
                 Reports
               </li>
-            </Link>
+            </Link> */}
           </ul>
         </nav>
       </aside>

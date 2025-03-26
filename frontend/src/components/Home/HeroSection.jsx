@@ -23,9 +23,9 @@ const HeroSection = () => {
     <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto opacity-80">
       Start your fitness journey today. Whether you’re looking to build muscle or improve your health, we have you covered.
     </p>
-    <button className="bg-white text-[#ff7e5f] py-4 px-12 rounded-full text-xl font-semibold transition transform duration-300 hover:scale-110 hover:bg-[#ff7e5f] hover:text-white hover:shadow-lg">
+    {/* <button className="bg-white text-[#ff7e5f] py-4 px-12 rounded-full text-xl font-semibold transition transform duration-300 hover:scale-110 hover:bg-[#ff7e5f] hover:text-white hover:shadow-lg">
       Join Now
-    </button>
+    </button> */}
   </div>
 </section>
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import FRONTEND_URL from "../../constant/const";
 
 export default function Todo() {
   const [taskDesc, setTaskDesc] = useState("");
@@ -28,7 +29,7 @@ export default function Todo() {
 
     // Send the data using Axios
     axios
-      .post("http://localhost:7002/api/task", taskData)
+      .post(`${FRONTEND_URL}/api/task`, taskData)
       .then((response) => {
         // Handle success response
         console.log("Task added:", response.data);

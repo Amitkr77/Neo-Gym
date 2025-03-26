@@ -3,10 +3,16 @@ import { FaBars, FaUserAlt } from "react-icons/fa"; // Import React Icons
 import { IoMdLogIn } from "react-icons/io"; // Login icon
 import { FiUserPlus } from "react-icons/fi"; // Sign Up icon
 import { Link } from "react-router-dom";
+import ServicesModal from "./ServicesModal";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,30 +39,30 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-8">
-            <a
-              href="#home"
+            <Link
+            to="/"
               className="text-white text-lg font-medium hover:text-[#ff7e5f] transition duration-300"
             >
               Home
-            </a>
-            <a
-              href="#services"
+            </Link>
+            <button
+              onClick={toggleModal}
               className="text-white text-lg font-medium hover:text-[#ff7e5f] transition duration-300"
             >
               Services
-            </a>
-            <a
-              href="#about"
+            </button>
+            <Link
+              to="/AboutPage"
               className="text-white text-lg font-medium hover:text-[#ff7e5f] transition duration-300"
             >
               About
-            </a>
-            <a
-              href="#contact"
+            </Link>
+            <Link
+              to="/contactUs"
               className="text-white text-lg font-medium hover:text-[#ff7e5f] transition duration-300"
             >
               Contact
-            </a>
+            </Link>
 
             <div className="flex space-x-4">
               <Link to="login">
@@ -66,10 +72,10 @@ const Navbar = () => {
                 </button>
               </Link>
               <Link to="Signup">
-              <button className="text-white bg-[#ff7e5f] py-2 px-6 rounded-full text-lg hover:bg-[#ff5a4e] transition duration-300">
-                <FiUserPlus className="inline mr-2" />
-                Sign Up
-              </button>
+                <button className="text-white bg-[#ff7e5f] py-2 px-6 rounded-full text-lg hover:bg-[#ff5a4e] transition duration-300">
+                  <FiUserPlus className="inline mr-2" />
+                  Sign Up
+                </button>
               </Link>
             </div>
           </div>
@@ -83,6 +89,8 @@ const Navbar = () => {
             </button>
           </div>
         </div>
+        {/* Modal Component */}
+        {isModalOpen && <ServicesModal toggleModal={toggleModal} />}
 
         {menuOpen && (
           <div className="md:hidden absolute top-0 left-0 w-full bg-black bg-opacity-90 flex flex-col items-center space-y-6 py-8">

@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import FRONTEND_URL from "../../constant/const";
 
 
 const SignUpPage = () => {
@@ -49,7 +50,7 @@ const SignUpPage = () => {
     console.log(memberDetails)
 
     try {
-      const res = await axios.post("http://localhost:7002/api/auth/signup", memberDetails, {
+      const res = await axios.post(`${FRONTEND_URL}/api/auth/signup`, memberDetails, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -165,7 +166,8 @@ const SignUpPage = () => {
           {step === 2 && (
             <>
               <div className="mb-6">
-                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">Street Address</label>
+                <h1 className="font-bold mb-2 text-lg">Address</h1>
+                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">Street </label>
                 <input
                   type="text"
                   value={address.street}

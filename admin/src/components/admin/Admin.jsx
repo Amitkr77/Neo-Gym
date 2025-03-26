@@ -87,7 +87,7 @@ const Admin = () => {
                 Member
               </Link>
             </li>
-            <li className="mb-2">
+            {/* <li className="mb-2">
               <Link
                 to="/admin/memberProgress"
                 className="flex items-center w-full text-left py-2 px-4 rounded hover:bg-gray-700 transition duration-200"
@@ -95,7 +95,7 @@ const Admin = () => {
                 <GiProgression className="mr-2" />
                 Member Progress
               </Link>
-            </li>
+            </li> */}
             <li className="mb-2">
               <Link
                 to="/admin/annoucement/MakeAnnouncement"
