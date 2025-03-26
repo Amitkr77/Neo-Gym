@@ -29,7 +29,7 @@ const Navbar = () => {
       <div className="max-w-screen-xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="text-2xl font-bold text-white">
-            <span className="text-[#ff7e5f] font-extrabold">Gym</span>Fit
+            <span className="text-[#ff7e5f] font-extrabold">Neo</span>Gym
           </div>
 
           <div className="hidden md:flex items-center space-x-8">

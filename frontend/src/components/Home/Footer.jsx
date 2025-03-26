@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-6">
         {/* Company Section */}
         <div className="flex justify-between items-center mb-12">
-          <h3 className="text-4xl font-semibold text-yellow-500">GymFit</h3>
+          <h3 className="text-4xl font-semibold text-yellow-500">NeoGym</h3>
           <p className="text-gray-400 text-sm">Your Fitness Journey Starts Here</p>
         </div>
 
