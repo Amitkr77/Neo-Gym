@@ -46,7 +46,7 @@ const Navbar = ({ overlay = false }) => {
             <li key={label}>
               <NavLink
                 to={to}
-                className="link-underline tap text-sm font-medium text-white/80 transition-colors hover:text-white"
+                className="link-underline tap eyebrow text-[0.72rem] text-white/75 transition-colors hover:text-white"
               >
                 {label}
               </NavLink>

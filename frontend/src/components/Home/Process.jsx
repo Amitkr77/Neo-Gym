@@ -10,21 +10,21 @@ const STEPS = [
 ];
 
 const Process = () => (
-  <section className="bg-bone-200/60 py-24 sm:py-32">
+  <section className="relative py-28 sm:py-40">
     <div className="container-x">
-      <SectionHeading index="04" eyebrow="Getting started" title="How joining" accent="works." />
+      <SectionHeading index="04" eyebrow="Getting started" title="How joining" accent="works." tone="light" />
       <ol className="mt-16 grid gap-10 md:grid-cols-3 md:gap-8">
         {STEPS.map((step, i) => (
-          <Reveal as="li" key={step.title} delay={i * 100} className="relative border-t border-ink pt-8">
-            <span className="display text-6xl text-ink/10" aria-hidden="true">0{i + 1}</span>
+          <Reveal as="li" key={step.title} delay={i * 100} className="relative glass p-7 sm:p-9">
+            <span className="display text-6xl text-ember/30" aria-hidden="true">0{i + 1}</span>
             <h3 className="display-sm mt-4 text-xl">{step.title}</h3>
-            <p className="mt-3 leading-relaxed text-stone-600">{step.body}</p>
+            <p className="mt-3 leading-relaxed text-stone-400">{step.body}</p>
           </Reveal>
         ))}
       </ol>
       <Reveal className="mt-14 flex flex-wrap gap-3" delay={150}>
-        <Link to="/Signup" className="btn-dark">Create account</Link>
-        <Link to="/contactUs" className="btn-outline-dark">Ask a question</Link>
+        <Link to="/Signup" className="btn-primary">Create account</Link>
+        <Link to="/contactUs" className="btn-outline-light backdrop-blur-sm">Ask a question</Link>
       </Reveal>
     </div>
   </section>

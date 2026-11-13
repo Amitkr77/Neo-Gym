@@ -38,4 +38,10 @@ export default [
       ],
     },
   },
+  {
+    // React Three Fiber elements take three.js props (uniforms, attach, args...) that the
+    // DOM-oriented rule does not know about.
+    files: ['src/components/three/**/*.{js,jsx}'],
+    rules: { 'react/no-unknown-property': 'off' },
+  },
 ]
