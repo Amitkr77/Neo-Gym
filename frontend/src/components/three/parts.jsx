@@ -1,4 +1,4 @@
-import { forwardRef, useMemo, useRef } from "react";
+import { forwardRef, useLayoutEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -126,27 +126,60 @@ export function Dumbbell({ materials, size = 1, ...props }) {
   );
 }
 
-/* Two-tier dumbbell rack with a row of bells, lightest to heaviest. */
+/* Two-tier dumbbell rack, lightest to heaviest. The bells are drawn as two InstancedMeshes
+   (all handles, all heads), so a full rack costs 2 draw calls instead of ~40. */
+const _m = new THREE.Matrix4();
+const _q = new THREE.Quaternion();
+const _e = new THREE.Euler();
+const _p = new THREE.Vector3();
+const _s = new THREE.Vector3();
+
 export function DumbbellRack({ materials, count = 7, ...props }) {
   const len = count * 0.62;
+  const tiers = [0.55, 0.95];
+  const handles = useRef();
+  const heads = useRef();
+
+  const geo = useMemo(
+    () => ({
+      handle: new THREE.CylinderGeometry(0.03, 0.03, 0.42, 12).rotateZ(Math.PI / 2),
+      head: new THREE.CylinderGeometry(0.11, 0.11, 0.12, 6).rotateZ(Math.PI / 2),
+    }),
+    []
+  );
+
+  useLayoutEffect(() => {
+    let h = 0;
+    let k = 0;
+    tiers.forEach((y, tier) => {
+      for (let i = 0; i < count; i++) {
+        const size = 0.8 + (i / count) * 0.6 - tier * 0.15;
+        const x = -len / 2 + 0.31 + i * 0.62;
+        const z = tier * -0.32;
+        _q.setFromEuler(_e.set(0, Math.PI / 2, 0));
+        _s.setScalar(size);
+        _m.compose(_p.set(x, y + 0.12, z), _q, _s);
+        handles.current.setMatrixAt(h++, _m);
+        for (const side of [1, -1]) {
+          // head offset runs along the bell's own axis, which the yaw turns onto world z
+          _m.compose(_p.set(x, y + 0.12, z - side * 0.24 * size), _q, _s);
+          heads.current.setMatrixAt(k++, _m);
+        }
+      }
+    });
+    handles.current.instanceMatrix.needsUpdate = true;
+    heads.current.instanceMatrix.needsUpdate = true;
+  }, [count, len]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <group {...props}>
-      {[0.55, 0.95].map((y, tier) => (
-        <group key={y}>
-          <mesh position={[0, y, tier * -0.32]} rotation={[-0.25, 0, 0]} material={materials.steel}>
-            <boxGeometry args={[len, 0.04, 0.32]} />
-          </mesh>
-          {Array.from({ length: count }, (_, i) => (
-            <Dumbbell
-              key={i}
-              materials={materials}
-              size={0.8 + (i / count) * 0.6 - tier * 0.15}
-              position={[-len / 2 + 0.31 + i * 0.62, y + 0.12, tier * -0.32]}
-              rotation={[0, Math.PI / 2, 0]}
-            />
-          ))}
-        </group>
+      {tiers.map((y, tier) => (
+        <mesh key={y} position={[0, y, tier * -0.32]} rotation={[-0.25, 0, 0]} material={materials.steel}>
+          <boxGeometry args={[len, 0.04, 0.32]} />
+        </mesh>
       ))}
+      <instancedMesh frustumCulled={false} ref={handles} args={[geo.handle, materials.chrome, count * tiers.length]} />
+      <instancedMesh frustumCulled={false} ref={heads} args={[geo.head, materials.rubber, count * tiers.length * 2]} />
       {[-len / 2, len / 2].map((x) => (
         <mesh key={x} position={[x, 0.5, -0.15]} material={materials.steel}>
           <boxGeometry args={[0.06, 1, 0.6]} />

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Grid } from "@react-three/drei";
+import { Grid, PerformanceMonitor } from "@react-three/drei";
 import * as THREE from "three";
 import {
   Barbell, ChalkDust, COLORS, DumbbellRack, EmberSun, FloorGlow, Kettlebell, LightBeam, MistLayer, Plate, PowerRack, StripLight, useMaterials,
@@ -24,18 +24,25 @@ const KEYFRAMES = [
   { at: 1.0, pos: [0, 1.5, 3.4], look: [0, 3.6, -14], sun: 1.25 },
 ];
 
-const tmpPos = new THREE.Vector3();
-const tmpLook = new THREE.Vector3();
+/* The camera rides one continuous Catmull-Rom spline through the keyframes rather than
+   easing in and out of each one, so it never "parks" between sections. Scroll progress maps
+   piecewise-linearly onto the spline parameter, which keeps each keyframe at its section.
+   Everything is preallocated: no garbage is created per frame. */
+const POS_CURVE = new THREE.CatmullRomCurve3(KEYFRAMES.map((k) => new THREE.Vector3(...k.pos)), false, "centripetal");
+const LOOK_CURVE = new THREE.CatmullRomCurve3(KEYFRAMES.map((k) => new THREE.Vector3(...k.look)), false, "centripetal");
+const sample = { pos: new THREE.Vector3(), look: new THREE.Vector3(), sun: 1 };
 
 function sampleKeyframes(p) {
   let i = 0;
   while (i < KEYFRAMES.length - 2 && p > KEYFRAMES[i + 1].at) i++;
   const a = KEYFRAMES[i];
   const b = KEYFRAMES[i + 1];
-  const t = smoothstep(a.at, b.at, p);
-  tmpPos.set(...a.pos).lerp(new THREE.Vector3(...b.pos), t);
-  tmpLook.set(...a.look).lerp(new THREE.Vector3(...b.look), t);
-  return { pos: tmpPos, look: tmpLook, sun: a.sun + (b.sun - a.sun) * t };
+  const local = Math.min(1, Math.max(0, (p - a.at) / (b.at - a.at)));
+  const u = (i + local) / (KEYFRAMES.length - 1);
+  POS_CURVE.getPoint(u, sample.pos);
+  LOOK_CURVE.getPoint(u, sample.look);
+  sample.sun = a.sun + (b.sun - a.sun) * smoothstep(0, 1, local);
+  return sample;
 }
 
 function CameraRig({ still, sunRef }) {
@@ -43,18 +50,24 @@ function CameraRig({ still, sunRef }) {
   const look = useRef(new THREE.Vector3(...KEYFRAMES[0].look));
   const sway = still ? 0 : 1;
 
+  const base = useRef(new THREE.Vector3(...KEYFRAMES[0].pos));
+  const lean = useRef({ x: 0, y: 0 });
+
   useFrame((state, dt) => {
     const d = Math.min(dt, 0.1);
     const k = sampleKeyframes(scrollState.progress);
     const t = state.clock.elapsedTime;
-    const tx = k.pos.x + (pointerState.x * 0.6 + Math.sin(t * 0.15) * 0.15) * sway;
-    const ty = k.pos.y + (pointerState.y * 0.3 + Math.sin(t * 0.21) * 0.08) * sway;
-    camera.position.x = damp(camera.position.x, tx, 3, d);
-    camera.position.y = damp(camera.position.y, ty, 3, d);
-    camera.position.z = damp(camera.position.z, k.pos.z, 3, d);
-    look.current.x = damp(look.current.x, k.look.x, 3, d);
-    look.current.y = damp(look.current.y, k.look.y, 3, d);
-    look.current.z = damp(look.current.z, k.look.z, 3, d);
+    // Scroll already arrives eased (Lenis), so the path follows it tightly; the pointer lean
+    // is smoothed separately and much more loosely, so the two never fight.
+    base.current.x = damp(base.current.x, k.pos.x, 6, d);
+    base.current.y = damp(base.current.y, k.pos.y, 6, d);
+    base.current.z = damp(base.current.z, k.pos.z, 6, d);
+    lean.current.x = damp(lean.current.x, (pointerState.x * 0.6 + Math.sin(t * 0.15) * 0.15) * sway, 1.6, d);
+    lean.current.y = damp(lean.current.y, (pointerState.y * 0.3 + Math.sin(t * 0.21) * 0.08) * sway, 1.6, d);
+    camera.position.set(base.current.x + lean.current.x, base.current.y + lean.current.y, base.current.z);
+    look.current.x = damp(look.current.x, k.look.x, 6, d);
+    look.current.y = damp(look.current.y, k.look.y, 6, d);
+    look.current.z = damp(look.current.z, k.look.z, 6, d);
     camera.lookAt(look.current);
 
     const sun = sunRef.current;
@@ -165,20 +178,53 @@ function Scene({ still, lite }) {
   );
 }
 
+/* Reduced motion renders on demand only: one fresh frame per scroll, nothing in between. */
+function InvalidateOnScroll() {
+  const invalidate = useThree((st) => st.invalidate);
+  useEffect(() => {
+    const on = () => invalidate();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, [invalidate]);
+  return null;
+}
+
 export default function GymScene() {
   const still = prefersReducedMotion();
-  const lite = isCoarsePointer();
+  const coarse = isCoarsePointer();
+  const maxDpr = coarse ? 1.5 : 1.75;
+  // Adaptive quality: PerformanceMonitor watches the real frame rate and walks the pixel
+  // ratio between 1 and max; if the device keeps struggling it drops to "lite" detail.
+  const [dpr, setDpr] = useState(Math.min(maxDpr, typeof window === "undefined" ? 1 : window.devicePixelRatio || 1));
+  const [degraded, setDegraded] = useState(false);
+  const [ready, setReady] = useState(false);
+  const lite = coarse || degraded;
 
   useEffect(() => attachScrollStore(), []);
 
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10" aria-hidden="true">
+    <div
+      className={`pointer-events-none fixed inset-0 -z-10 transition-opacity duration-[1400ms] ease-premium ${ready ? "opacity-100" : "opacity-0"}`}
+      aria-hidden="true"
+    >
       <Canvas
-        dpr={lite ? [1, 1.5] : [1, 1.75]}
+        dpr={dpr}
         camera={{ position: KEYFRAMES[0].pos, fov: 42, near: 0.1, far: 80 }}
-        gl={{ antialias: !lite, powerPreference: "high-performance" }}
+        gl={{ antialias: !coarse, powerPreference: "high-performance", stencil: false }}
         frameloop={still ? "demand" : "always"}
+        // fade the scene in once the first frame is actually on screen, instead of popping
+        onCreated={() => requestAnimationFrame(() => setReady(true))}
       >
+        <PerformanceMonitor
+          bounds={() => [45, 58]}
+          flipflops={3}
+          onChange={({ factor }) => setDpr(Math.round((1 + (maxDpr - 1) * factor) * 4) / 4)}
+          onFallback={() => {
+            setDpr(1);
+            setDegraded(true);
+          }}
+        />
+        {still && <InvalidateOnScroll />}
         <Scene still={still} lite={lite} />
       </Canvas>
       {/* vignette + bottom haze so text always has a dark ground to sit on */}

@@ -49,7 +49,7 @@ export default function CursorRing() {
     <div
       ref={ref}
       aria-hidden="true"
-      className="pointer-events-none fixed left-0 top-0 z-[70] h-8 w-8 rounded-full border border-ember/70 opacity-0 mix-blend-screen transition-opacity duration-300"
+      className="pointer-events-none fixed left-0 top-0 z-[70] will-change-transform h-8 w-8 rounded-full border border-ember/70 opacity-0 transition-opacity duration-300"
     />
   );
 }

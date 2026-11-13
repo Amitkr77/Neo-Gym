@@ -49,7 +49,7 @@ function ProgramCard({ program, index, total }) {
       <div data-art className={`relative aspect-[4/3] overflow-hidden rounded-xl bg-gradient-to-br ${program.hue} via-ink to-ink`}>
         <RippleArt motif={index} hoverRef={pointer} className="absolute inset-0" />
         <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-4 p-4">
-          <span className="eyebrow rounded-full bg-ink/60 px-3 py-1 text-[0.68rem] text-white/80 backdrop-blur-sm">{program.tag}</span>
+          <span className="eyebrow rounded-full bg-ink/75 px-3 py-1 text-[0.68rem] text-white/80">{program.tag}</span>
           <span className="eyebrow shrink-0 text-[0.68rem] text-white/70">
             0{index + 1} / 0{total}
           </span>
@@ -87,7 +87,7 @@ const Classes = () => (
           </h2>
         </Reveal>
         <Reveal delay={100}>
-          <Link to="/Signup" className="btn-outline-light backdrop-blur-sm">
+          <Link to="/Signup" className="btn-outline-light bg-ink/40">
             Become a member <span aria-hidden="true">→</span>
           </Link>
         </Reveal>

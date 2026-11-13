@@ -63,7 +63,7 @@ const Services = () => (
           <Reveal
             key={plan.name}
             delay={i * 90}
-            className={`relative flex flex-col rounded-2xl p-7 sm:p-8 md:flex-row md:items-center md:gap-10 lg:flex-col lg:items-stretch lg:gap-0 ${plan.featured ? "border border-ember/50 bg-ember/10 backdrop-blur-md" : "glass"}`}
+            className={`relative flex flex-col rounded-2xl p-7 sm:p-8 md:flex-row md:items-center md:gap-10 lg:flex-col lg:items-stretch lg:gap-0 ${plan.featured ? "border border-ember/50 bg-[#2a120b]/85" : "glass"}`}
           >
             <p className={`font-serif text-4xl italic md:w-40 md:shrink-0 lg:w-auto ${plan.featured ? "text-ember" : "text-ember"}`}>{plan.name}</p>
             <p className={`mt-4 flex-1 leading-relaxed md:mt-0 lg:mt-6 ${plan.featured ? "text-white/70" : "text-stone-400"}`}>{plan.body}</p>

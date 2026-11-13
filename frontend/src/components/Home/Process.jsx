@@ -10,7 +10,7 @@ const STEPS = [
 ];
 
 const Process = () => (
-  <section className="relative py-28 sm:py-40">
+  <section id="joining" className="relative py-28 sm:py-40">
     <div className="container-x">
       <SectionHeading index="04" eyebrow="Getting started" title="How joining" accent="works." tone="light" />
       <ol className="mt-16 grid gap-10 md:grid-cols-3 md:gap-8">
@@ -24,7 +24,7 @@ const Process = () => (
       </ol>
       <Reveal className="mt-14 flex flex-wrap gap-3" delay={150}>
         <Link to="/Signup" className="btn-primary">Create account</Link>
-        <Link to="/contactUs" className="btn-outline-light backdrop-blur-sm">Ask a question</Link>
+        <Link to="/contactUs" className="btn-outline-light bg-ink/40">Ask a question</Link>
       </Reveal>
     </div>
   </section>

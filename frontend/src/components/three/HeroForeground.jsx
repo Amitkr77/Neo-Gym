@@ -1,6 +1,6 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ChalkDust, Kettlebell, Plate, useMaterials } from "./parts";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { attachScrollStore, damp, isCoarsePointer, pointerState, prefersReducedMotion, scrollState } from "./scrollStore";
 
 /* ---------------------------------------------------------------------------
@@ -71,14 +71,26 @@ function Props({ still }) {
 export default function HeroForeground() {
   const still = prefersReducedMotion();
   const lite = isCoarsePointer();
+  const wrap = useRef(null);
+  // Stop rendering entirely once the hero has scrolled away: no point drawing kettlebells
+  // nobody can see while the main scene needs the GPU.
+  const [onScreen, setOnScreen] = useState(true);
+
   useEffect(() => attachScrollStore(), []);
+  useEffect(() => {
+    if (!wrap.current) return;
+    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting), { rootMargin: "100px 0px" });
+    io.observe(wrap.current);
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <div className="pointer-events-none absolute inset-0 z-20" aria-hidden="true">
+    <div ref={wrap} className="pointer-events-none absolute inset-0 z-20" aria-hidden="true">
       <Canvas
         dpr={lite ? [1, 1.5] : [1, 1.75]}
         camera={{ position: [0, 0, 8], fov: 40 }}
-        gl={{ alpha: true, antialias: !lite }}
-        frameloop={still ? "demand" : "always"}
+        gl={{ alpha: true, antialias: !lite, stencil: false }}
+        frameloop={!onScreen ? "never" : still ? "demand" : "always"}
       >
         <Props still={still} />
       </Canvas>

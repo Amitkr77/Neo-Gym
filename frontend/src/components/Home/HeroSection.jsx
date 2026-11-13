@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import SceneBoundary from "../ui/SceneBoundary";
 
+const MotionLink = motion.create(Link);
 const HeroForeground = lazy(() => import("../three/HeroForeground"));
 
 const CHAPTERS = [
@@ -67,7 +68,7 @@ const HeroSection = () => {
           <Link to="/Signup" className="btn-primary px-8 py-4">
             Join Now <span aria-hidden="true">→</span>
           </Link>
-          <Link to="/contactUs" className="btn-outline-light px-8 py-4 backdrop-blur-sm">
+          <Link to="/contactUs" className="btn-outline-light bg-ink/40 px-8 py-4">
             Visit or Enquire
           </Link>
         </div>
@@ -75,7 +76,7 @@ const HeroSection = () => {
 
       {/* Vertical side label */}
       <p
-        className="eyebrow pointer-events-none absolute right-5 top-28 z-30 hidden text-stone-400 [writing-mode:vertical-rl] sm:right-8 md:block lg:right-10"
+        className="eyebrow pointer-events-none absolute right-5 top-28 z-30 hidden text-stone-400 [writing-mode:vertical-rl] sm:right-8 md:block lg:right-10 xl:hidden"
         aria-hidden="true"
       >
         Train with intent <span className="text-ember">—</span> Neogym
@@ -106,8 +107,8 @@ const HeroSection = () => {
         <div className="pointer-events-none absolute inset-x-0 -top-2 bottom-0 -z-10 bg-gradient-to-t from-ink/90 via-ink/45 to-transparent" aria-hidden="true" />
         {/* Cue and preview float above the chapter row, out of flow, so they never add height. */}
         <div className="pointer-events-none absolute inset-x-5 bottom-full mb-4 flex items-end justify-between gap-6 sm:inset-x-8 lg:inset-x-10 [@media(max-height:640px)]:hidden">
-          <motion.a
-            href="#about"
+          <MotionLink
+            to="/#about"
             style={cue}
             className="eyebrow tap pointer-events-auto hidden items-center gap-3 text-stone-400 hover:text-white sm:inline-flex"
           >
@@ -115,7 +116,7 @@ const HeroSection = () => {
               <span className="scroll-cue absolute inset-x-0 top-0 h-3 bg-ember" />
             </span>
             Scroll to enter
-          </motion.a>
+          </MotionLink>
 
           <motion.div
             style={reduce ? undefined : { opacity: previewOpacity, filter: previewBlur }}
