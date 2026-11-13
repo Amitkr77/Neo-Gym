@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { FiMail, FiLock } from "react-icons/fi";
+import { FiMail, FiLock, FiUser } from "react-icons/fi";
 import { FaUserPlus } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import FRONTEND_URL from "../../constant/const";
+import { getToken } from "../../lib/session";
 
 const SignUpPage = () => {
   const [fullname, setfullname] = useState("");
@@ -25,6 +26,10 @@ const SignUpPage = () => {
       setError("Passwords do not match.");
       return;
     }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -36,23 +41,19 @@ const SignUpPage = () => {
     };
 
     try {
-      const res = await axios.post(`${FRONTEND_URL}/api/admin/register`, userDetails, {
+      await axios.post(`${FRONTEND_URL}/api/admin/register`, userDetails, {
         headers: {
           "Content-Type": "application/json",
         },
       });
 
-      toast.success("Registration successful!", {
-        position: "top-center",
-      });
-      navigate("/"); // Redirect to login page
+      toast.success("Admin account created.");
+      // A logged-in admin adding a colleague stays in the panel; first-time setup goes to login.
+      navigate(getToken() ? "/admin/dashboard" : "/");
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Error during registration. Please try again.";
       setError(errorMessage);
-      toast.error(errorMessage, {
-        position: "top-center",
-      });
-      console.error("Error during signup:", error);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -70,14 +71,15 @@ const SignUpPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h2 className="text-3xl font-extrabold text-[#1E3A8A] text-center mb-6">Sign Up</h2>
+        <h2 className="text-3xl font-extrabold text-[#1E3A8A] text-center mb-2">Create admin account</h2>
+        <p className="text-sm text-gray-500 text-center mb-6">Available only during first-time setup, or to a logged-in admin adding a colleague.</p>
 
         <form onSubmit={handleSubmit}>
           {/* Full Name */}
           <div className="mb-6">
             <label className="block text-lg font-medium text-[#1E3A8A] mb-2">Full Name</label>
             <div className="flex items-center border border-gray-300 rounded-lg px-4 py-2 focus-within:ring-2 focus-within:ring-[#ff7e5f]">
-              <FiMail className="text-xl text-[#ff7e5f] mr-2" />
+              <FiUser className="text-xl text-[#ff7e5f] mr-2" />
               <input
                 type="text"
                 value={fullname}

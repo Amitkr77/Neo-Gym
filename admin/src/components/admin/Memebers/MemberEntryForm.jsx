@@ -1,12 +1,16 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import FRONTEND_URL from "../../../constant/const";
 
 export default function MemberEntryForm() {
-  const [selectedService, setSelectedService] = useState("");
+  const [, setSelectedService] = useState("");
   const [amount, setAmount] = useState("");
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const initialForm = {
     fullName: "",
     username: "",
     password: "",
@@ -30,7 +34,8 @@ export default function MemberEntryForm() {
     reminder: true,
     paidDate: "",
     chosenService: "",
-  });
+  };
+  const [formData, setFormData] = useState(initialForm);
 
   // Handle form data change
   const handleChange = (e) => {
@@ -77,7 +82,18 @@ export default function MemberEntryForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
+    setError("");
+    if (!/^\d{10}$/.test(formData.contactNumber)) {
+      setStep(1);
+      setError("Contact number must be exactly 10 digits.");
+      return;
+    }
+    if (formData.password.length < 6) {
+      setStep(1);
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+    setSubmitting(true);
 
     const { street, city, state, zipCode } = formData.address;
     const  address = {street, city, state, zipCode}
@@ -98,14 +114,14 @@ export default function MemberEntryForm() {
       initialBodyType: formData.initialBodyType,
       currentBodyType: formData.currentBodyType,
       progressDate: formData.progressDate,
-      reminder: formData.reminder,
+      reminder: formData.reminder === true || formData.reminder === "true",
       paidDate: formData.paidDate,
       chosenService: formData.chosenService,
       amount: amount,
     }
 
     try {
-      const response = await axios.post(
+      await axios.post(
         `${FRONTEND_URL}/api/member/users`,
         dataToSubmit,
         {
@@ -115,12 +131,15 @@ export default function MemberEntryForm() {
         }
       );
 
-      // Check if the request was successful
-      console.log("Form submitted successfully:", response.data);
-      // Handle success (e.g., show a success message, clear form, etc.)
-    } catch (error) {
-      console.error("Error submitting form:", error.response || error);
-      // Handle error (e.g., show an error message)
+      toast.success(`Member ${formData.fullName} added`);
+      setFormData(initialForm);
+      setSelectedService("");
+      setAmount("");
+      setStep(1);
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not add the member. Please check the details and try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -128,7 +147,11 @@ export default function MemberEntryForm() {
     <div className="flex flex-wrap">
       <div className="w-full md:w-1/2 p-4">
         <div className="bg-white shadow-md rounded-lg p-6">
-          <h5 className="text-lg font-semibold mb-4">Member Entry Form</h5>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-lg font-semibold">Member Entry Form</h1>
+            <Link to="/admin/member/RegisteredMembers" className="text-blue-600 underline text-sm">Back to members</Link>
+          </div>
+          {error && <p className="mb-4 p-3 rounded bg-red-50 text-red-700" role="alert">{error}</p>}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Step 1: Personal Info and contactNumber */}
             {step === 1 && (
@@ -235,7 +258,7 @@ export default function MemberEntryForm() {
                 {/* contactNumber Number */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    contactNumber Number:
+                    Contact Number:
                   </label>
                   <input
                     type="tel"
@@ -333,7 +356,7 @@ export default function MemberEntryForm() {
                 {/* chosenService Selection */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    chosenService:
+                    Chosen Service:
                   </label>
                   <div className="flex flex-col space-y-2">
                     <label className="flex items-center">
@@ -555,8 +578,9 @@ export default function MemberEntryForm() {
                 <button
                   className="bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600 transition"
                   type="submit"
+                  disabled={submitting}
                 >
-                  Submit
+                  {submitting ? "Saving…" : "Submit"}
                 </button>
               )}
             </div>

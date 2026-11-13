@@ -1,8 +1,9 @@
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import Modal from "react-modal";
 import { Link } from "react-router-dom";
-import FRONTEND_URL from "../../../../../frontend/src/constant/const";
+import FRONTEND_URL from "../../../constant/const";
 
 Modal.setAppElement('#root'); // Required for accessibility - set root element for the modal
 
@@ -20,7 +21,7 @@ export default function StaffList() {
       try {
         const { data } = await axios.get(`${FRONTEND_URL}/api/staff`);
         setStaff(data);
-      } catch (error) {
+      } catch {
         setError("Something went wrong while fetching staff data.");
       } finally {
         setLoading(false);
@@ -34,11 +35,11 @@ export default function StaffList() {
       const confirmDelete = window.confirm("Are you sure you want to delete this staff member?");
       if (confirmDelete) {
         await axios.delete(`${FRONTEND_URL}/api/staff/${staffId}`);
-        setStaff(staff.filter((member) => member._id !== staffId));
-        alert("Staff member deleted successfully.");
+        setStaff((prev) => prev.filter((member) => member._id !== staffId));
+        toast.success("Staff member deleted.");
       }
-    } catch (error) {
-      alert("Failed to delete staff member.");
+    } catch {
+      toast.error("Failed to delete staff member.");
     }
   };
 
@@ -52,6 +53,11 @@ export default function StaffList() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name.startsWith("address.")) {
+      const key = name.split(".")[1];
+      setEditStaffData((prev) => ({ ...prev, address: { ...(prev.address || {}), [key]: value } }));
+      return;
+    }
     setEditStaffData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -68,17 +74,15 @@ export default function StaffList() {
     }
 
     try {
-      const { _id, ...updatedData } = editStaffData;
-      await axios.put(`${FRONTEND_URL}/api/staff/${_id}`, updatedData);
-      setStaff((prevStaff) =>
-        prevStaff.map((member) =>
-          member._id === _id ? { ...member, ...updatedData } : member
-        )
-      );
+      const { _id, fullname, username, email, gender, designation, contact, address } = editStaffData;
+      const { data: updated } = await axios.put(`${FRONTEND_URL}/api/staff/${_id}`, {
+        fullname, username, email, gender, designation, contact, address,
+      });
+      setStaff((prevStaff) => prevStaff.map((member) => (member._id === _id ? updated : member)));
       setIsModalOpen(false);
-      setSuccessMessage("Staff updated successfully.");
+      toast.success("Staff member updated.");
     } catch (error) {
-      setFormError("Failed to update staff member. Please try again.");
+      setFormError(error.response?.data?.message || "Failed to update staff member. Please try again.");
     }
   };
 
@@ -127,6 +131,11 @@ export default function StaffList() {
               </tr>
             </thead>
             <tbody className="text-gray-700">
+              {staff.length === 0 && (
+                <tr>
+                  <td colSpan="9" className="text-center py-6 text-gray-500">No staff members yet.</td>
+                </tr>
+              )}
               {staff.map((member, index) => (
                 <tr key={member._id} className="hover:bg-gray-50 transition duration-200">
                   <td className="text-center py-3 px-4 border-b">{index + 1}</td>
@@ -146,14 +155,14 @@ export default function StaffList() {
                       onClick={() => handleEdit(member._id)}
                       className="text-green-500 hover:text-green-700 transition mr-2"
                     >
-                      <i className="fas fa-edit"></i> Edit
+                      Edit
                     </button>
 
                     <button
                       onClick={() => handleDelete(member._id)}
                       className="text-red-500 hover:text-red-700 transition"
                     >
-                      <i className="fas fa-trash"></i> Remove
+                      Remove
                     </button>
                   </td>
                 </tr>
@@ -239,26 +248,43 @@ export default function StaffList() {
               className="border border-gray-300 rounded-lg px-4 py-2 w-full"
               required
             >
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
             </select>
           </div>
 
-          {/* Address */}
-          <div>
-            <label className="block text-gray-700" htmlFor="address">
-              Address
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block text-gray-700">
+              Designation
+              <select name="designation" value={editStaffData?.designation || "trainer"} onChange={handleInputChange} className="border border-gray-300 rounded-lg px-3 py-2 w-full">
+                <option value="cashier">Cashier</option>
+                <option value="trainer">Trainer</option>
+                <option value="manager">Manager</option>
+              </select>
             </label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              value={editStaffData?.address || ""}
-              onChange={handleInputChange}
-              className="border border-gray-300 rounded-lg px-4 py-2 w-full"
-            />
+            <label className="block text-gray-700">
+              Contact
+              <input name="contact" value={editStaffData?.contact || ""} onChange={handleInputChange} pattern="[0-9]{10,15}" className="border border-gray-300 rounded-lg px-3 py-2 w-full" required />
+            </label>
           </div>
+
+          {/* Address (structured, matching the database) */}
+          <fieldset className="grid grid-cols-2 gap-3">
+            <legend className="text-gray-700 mb-1">Address</legend>
+            {[["street", "Street"], ["city", "City"], ["state", "State"], ["zipCode", "PIN / ZIP"]].map(([key, label]) => (
+              <input
+                key={key}
+                aria-label={label}
+                placeholder={label}
+                name={`address.${key}`}
+                value={editStaffData?.address?.[key] || ""}
+                onChange={handleInputChange}
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+                required
+              />
+            ))}
+          </fieldset>
 
           {/* Submit and Cancel buttons */}
           <div className="flex justify-between mt-4">

@@ -1,16 +1,29 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { FiLock, FiUser } from "react-icons/fi";
 import { FaSignInAlt } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import FRONTEND_URL from "../../constant/const";
+import { saveSession, getToken } from "../../lib/session";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const expired = new URLSearchParams(location.search).get("expired");
+
+  useEffect(() => {
+    if (getToken()) navigate("/admin/dashboard", { replace: true });
+    // Only offer account creation while the first admin has not been created yet.
+    axios
+      .get(`${FRONTEND_URL}/api/admin/setup-status`)
+      .then((res) => setRegistrationOpen(Boolean(res.data.registrationOpen)))
+      .catch(() => setRegistrationOpen(false));
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData((prevData) => ({
@@ -27,14 +40,14 @@ const LoginPage = () => {
     try {
       const res = await axios.post(`${FRONTEND_URL}/api/admin/login`, formData);
 
-      if (res.status === 200) {
-        navigate("/admin/dashboard");
+      if (res.status === 200 && res.data.token) {
+        saveSession(res.data.token, res.data.admin);
+        navigate(location.state?.from || "/admin/dashboard", { replace: true });
       } else {
         setError(res.data.message || "Login failed");
       }
     } catch (error) {
       setError(error.response?.data?.message || "An error occurred");
-      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -115,15 +128,20 @@ const LoginPage = () => {
             )}
           </motion.button>
         </form>
-        {/* Sign Up link */}
+        {expired && !error && (
+          <p className="text-sm text-amber-700 mt-4 text-center">Your session has ended. Please log in again.</p>
+        )}
+        {/* Account creation link: only during first-time setup */}
+        {registrationOpen && (
         <div className="mt-4 text-center">
           <p className="text-sm">
-            Don't have an account?{" "}
+            First-time setup:{" "}
             <Link to="/signup" className="text-[#ff7e5f] hover:text-[#ff5a4e]">
-              Sign Up
+              Create the owner account
             </Link>
           </p>
         </div>
+        )}
       </motion.div>
     </div>
   );

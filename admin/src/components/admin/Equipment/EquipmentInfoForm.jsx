@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
-import FRONTEND_URL from "../../../constant/const";
+import FRONTEND_URL, { CURRENCY } from "../../../constant/const";
+import { Link } from "react-router-dom";
 
 export function EquipmentInfoForm() {
   const [formData, setFormData] = useState({
@@ -35,7 +36,7 @@ export function EquipmentInfoForm() {
     setSuccess(null);
 
     try {
-      const response = await axios.post(
+      await axios.post(
         `${FRONTEND_URL}/api/equipment`,
         formData
       );
@@ -51,8 +52,7 @@ export function EquipmentInfoForm() {
         amount: "",
       });
     } catch (err) {
-      setError("Error adding equipment. Please try again.");
-      console.error(err);
+      setError(err.response?.data?.message || "Error adding equipment. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,10 @@ export function EquipmentInfoForm() {
     <div className="container mx-auto p-4">
       {/* Equipment Info Form */}
       <div className="bg-white shadow-lg rounded-lg p-6">
-        <h5 className="text-xl font-semibold mb-6">Add New Equipment</h5>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-xl font-semibold">Add New Equipment</h1>
+          <Link to="/admin/equipment/EquipmentList" className="text-blue-600 underline text-sm">Back to equipment</Link>
+        </div>
 
         {/* Display Success or Error Messages */}
         {error && <div className="text-red-500 mb-4">{error}</div>}
@@ -107,9 +110,11 @@ export function EquipmentInfoForm() {
               </label>
               <input
                 type="date"
-                name="purchasedDate" // Change 'date' to 'purchasedDate'
+                name="purchasedDate"
                 value={formData.purchasedDate}
                 onChange={handleChange}
+                max={new Date().toISOString().slice(0, 10)}
+                required
                 className="w-full border border-gray-300 rounded p-2"
               />
               <span className="text-xs text-gray-500">
@@ -171,12 +176,13 @@ export function EquipmentInfoForm() {
                 value={formData.contact}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded p-2"
-                placeholder="(999) 999-9999"
-                minLength="10"
+                placeholder="10-digit number"
+                pattern="[0-9]{10}"
+                inputMode="numeric"
                 maxLength="10"
                 required
               />
-              <span className="text-xs text-gray-500">(999) 999-9999</span>
+              <span className="text-xs text-gray-500">10 digits, numbers only</span>
             </div>
 
             <div className="mb-4">
@@ -184,7 +190,7 @@ export function EquipmentInfoForm() {
                 Cost Per Item:
               </label>
               <div className="flex items-center">
-                <span className="text-sm font-medium">$</span>
+                <span className="text-sm font-medium">{CURRENCY}</span>
                 <input
                   type="number"
                   name="amount"

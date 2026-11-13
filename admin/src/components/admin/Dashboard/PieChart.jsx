@@ -1,134 +1,55 @@
-import React from "react";
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  Typography,
-} from "@material-tailwind/react";
+import { Card, CardBody } from "@material-tailwind/react";
 import Chart from "react-apexcharts";
 import { FaChartPie } from "react-icons/fa";
 
-export default function PieChart() {
-  const pieChartMemberConfig = {
-    type: "pie",
-    width: 280,
-    height: 280,
-    series: [60, 40],
-    options: {
-      chart: {
-        toolbar: {
-          show: false,
-        },
-      },
+const pie = (series, labels, colors) => ({
+  type: "pie",
+  width: 300,
+  height: 280,
+  series,
+  options: {
+    chart: { toolbar: { show: false } },
+    dataLabels: { enabled: false },
+    colors,
+    labels,
+    legend: { show: true, position: "right", labels: { colors: "#616161" } },
+    tooltip: { y: { formatter: (value) => `${value} ${value === 1 ? "person" : "people"}` } },
+  },
+});
 
-      dataLabels: {
-        enabled: false,
-      },
-      colors: ["#1e88e5", "#ff8f00"],
-      legend: {
-        show: true,
-        position: "right",
-        markers: {
-          width: 10,
-          height: 10,
-        },
-        labels: {
-          colors: "#616161",
-        },
-      },
-      tooltip: {
-        y: {
-          formatter: (value) => `${value} people`,
-        },
-      },
-      labels: ["Male", "Female"],
-    },
-  };
-
-  const pieChartStaffConfig = {
-    type: "pie",
-    width: 280,
-    height: 280,
-    series: [50, 25, 25],
-    options: {
-      chart: {
-        toolbar: {
-          show: false,
-        },
-      },
-
-      dataLabels: {
-        enabled: false,
-      },
-      colors: ["#1e88e5", "#ff8f00", "#ff9f00"],
-      legend: {
-        show: true,
-        position: "right",
-
-        markers: {
-          width: 10,
-          height: 10,
-        },
-        labels: {
-          colors: "#616161",
-          formatter: function (value, opts) {
-            // Custom legend names based on series index
-            const seriesNames = ["Manager", "Staff", "Trainer"];
-            return seriesNames[opts.seriesIndex];
-          },
-        },
-      },
-      tooltip: {
-        y: {
-          formatter: (value) => `${value} people`,
-        },
-      },
-      labels: ["Manager", "Staff", "Trainer"],
-    },
-  };
+const Panel = ({ title, series, labels, colors }) => {
+  const hasData = series.some((v) => v > 0);
   return (
-    <>
-      <section className="flex justify-around gap-10 p-2">
-        <div className=" w-full">
-          <div className="flex items-center gap-1 border py-1 px-1 ">
-            <FaChartPie className="h-5 w-5" />
-            <h1 className="border-l p-1">
-              Registered Gym Members by Gender: Overview
-            </h1>
-          </div>
-          <Card className="rounded-b-xl rounded-t-none">
-            <CardHeader
-              floated={false}
-              shadow={false}
-              color="transparent"
-              className="flex flex-col gap-4 rounded-none md:flex-row md:items-center"
-            ></CardHeader>
-            <CardBody className="mt-4 grid place-items-center px-2">
-              <Chart {...pieChartMemberConfig} />
-            </CardBody>
-          </Card>
-        </div>
-        <div className=" w-full">
-          <div className="flex items-center gap-1 border py-1 px-1 ">
-            <FaChartPie className="h-5 w-5" />
+    <div className="w-full">
+      <div className="flex items-center gap-1 border py-1 px-1">
+        <FaChartPie className="h-5 w-5" aria-hidden="true" />
+        <h2 className="border-l p-1 font-medium">{title}</h2>
+      </div>
+      <Card className="rounded-b-xl rounded-t-none">
+        <CardBody className="mt-4 grid place-items-center px-2 min-h-[200px]">
+          {hasData ? <Chart {...pie(series, labels, colors)} /> : <p className="text-gray-500">No data yet</p>}
+        </CardBody>
+      </Card>
+    </div>
+  );
+};
 
-            <h1 className="border-l p-1">
-              Staff Members by Designation: Overview
-            </h1>
-          </div>
-          <Card className="rounded-b-xl rounded-t-none">
-            <CardHeader
-              floated={false}
-              shadow={false}
-              color="transparent"
-              className="flex flex-col gap-4 rounded-none md:flex-row md:items-center"
-            ></CardHeader>
-            <CardBody className="mt-4 grid place-items-center px-2">
-              <Chart {...pieChartStaffConfig} />
-            </CardBody>
-          </Card>
-        </div>
-      </section>
-    </>
+// Gender and staff-role breakdowns from live data (previously fixed 60/40 and 50/25/25).
+export default function PieChart({ metrics }) {
+  return (
+    <section className="flex flex-col lg:flex-row justify-around gap-6 p-2">
+      <Panel
+        title="Registered members by gender"
+        series={metrics.membersByGender}
+        labels={["Male", "Female", "Other"]}
+        colors={["#1e88e5", "#ff8f00", "#8e24aa"]}
+      />
+      <Panel
+        title="Staff by designation"
+        series={metrics.staffByDesignation}
+        labels={["Manager", "Cashier", "Trainer"]}
+        colors={["#1e88e5", "#ff8f00", "#43a047"]}
+      />
+    </section>
   );
 }

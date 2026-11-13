@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import FRONTEND_URL from "../../../../../frontend/src/constant/const";
+import FRONTEND_URL from "../../../constant/const";
 
 export function EquipmentManagement() {
   const [equipmentData, setEquipmentData] = useState([]);
@@ -84,7 +84,7 @@ export function EquipmentManagement() {
         setEditingEquipment(null);
       } catch (err) {
         console.error("Error updating equipment:", err);
-        setError("Failed to update equipment");
+        setError(err.response?.data?.message || "Failed to update equipment");
       }
     }
   };
@@ -137,13 +137,13 @@ export function EquipmentManagement() {
                       onClick={() => handleUpdate(equipment)}
                       className="text-blue-600 hover:text-blue-800 mr-4 transition-colors"
                     >
-                      <i className="fas fa-edit"></i> Edit
+                      Edit
                     </button>
                     <button
                       onClick={() => handleDelete(equipment._id)}
                       className="text-red-600 hover:text-red-800 transition-colors"
                     >
-                      <i className="fas fa-trash"></i> Remove
+                      Remove
                     </button>
                   </td>
                 </tr>

@@ -1,25 +1,24 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios"; // Import Axios
+import { useState, useEffect } from "react";
+import axios from "axios";
+import FRONTEND_URL from "../../../constant/const";
+import { formatDate } from "../../../lib/useGymData";
 import { Link } from "react-router-dom";
 import {
   Card,
   CardHeader,
   Typography,
-  Button,
   CardBody,
-  IconButton,
-  Tooltip,
   Input,
 } from "@material-tailwind/react";
 
 const TABLE_HEAD = [
-  "fullName",
+  "Full Name",
   "Username",
   "Gender",
   "Contact Number",
   "D.O.R",
   "Address",
-  "Amount",
+  "Status",
   "Chosen Service",
   "Plan",
   "",
@@ -44,8 +43,8 @@ export function RegisteredMembers() {
           `${FRONTEND_URL}/api/member/users`
         );
         setUsers(response.data);
-      } catch (error) {
-        setError(error.message || "An error occurred while fetching data.");
+      } catch {
+        setError("Could not load members. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -64,15 +63,13 @@ export function RegisteredMembers() {
       (user.gender &&
         user.gender.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (user.contactNumber && user.contactNumber.includes(searchTerm)) ||
-      (user.dateOfRegistration &&
-        user.dateOfRegistration.includes(searchTerm)) ||
+      (user.status && user.status.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (user.address &&
         `${user.address.street || ""}, ${user.address.city || ""}, ${
           user.address.state || ""
         } ${user.address.zipCode || ""}`
           .toLowerCase()
           .includes(searchTerm.toLowerCase())) ||
-      (user.amount && user.amount.toString().includes(searchTerm)) ||
       (user.chosenService &&
         user.chosenService.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (user.plan && user.plan.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -111,12 +108,6 @@ export function RegisteredMembers() {
                 onChange={handleSearchChange}
               />
             </div>
-            <Button
-              className="flex items-center text-stone-700 gap-3"
-              size="sm"
-            >
-              Search
-            </Button>
           </div>
         </div>
       </CardHeader>
@@ -161,7 +152,7 @@ export function RegisteredMembers() {
                         contactNumber,
                         dateOfRegistration,
                         address,
-                        amount,
+                        status,
                         chosenService,
                         plan,
                       },
@@ -216,7 +207,7 @@ export function RegisteredMembers() {
                               color="blue-gray"
                               className="font-normal"
                             >
-                              {dateOfRegistration}
+                              {formatDate(dateOfRegistration)}
                             </Typography>
                           </td>
                           <td className={classes}>
@@ -225,7 +216,7 @@ export function RegisteredMembers() {
                               color="blue-gray"
                               className="font-normal"
                             >
-                              {`${address.street}, ${address.city}, ${address.state} ${address.zipCode}`}
+                              {address ? `${address.street}, ${address.city}, ${address.state} ${address.zipCode}` : "—"}
                             </Typography>
                           </td>
                           <td className={classes}>
@@ -234,7 +225,7 @@ export function RegisteredMembers() {
                               color="blue-gray"
                               className="font-normal"
                             >
-                              {amount}
+                              {status}
                             </Typography>
                           </td>
                           <td className={classes}>
@@ -256,11 +247,9 @@ export function RegisteredMembers() {
                             </Typography>
                           </td>
                           <td className={classes}>
-                            <Tooltip content="Edit User">
-                              <IconButton variant="text">
-                                <i className="fas fa-edit"></i>
-                              </IconButton>
-                            </Tooltip>
+                            <Link to="/admin/member/MemberManagement" className="text-blue-700 underline">
+                              Manage
+                            </Link>
                           </td>
                         </tr>
                       );
