@@ -16,7 +16,8 @@ const addressSchema = new mongoose.Schema({
     zipCode: {
         type: String,
         required: true,
-        match: [/^\d{5}(-\d{4})?$/, 'Please enter a valid ZIP code.'],
+        // Accepts Indian 6-digit PIN codes and US ZIP / ZIP+4.
+        match: [/^(\d{6}|\d{5}(-\d{4})?)$/, 'Please enter a valid PIN / ZIP code.'],
     },
 }, { _id: false });
 

@@ -1,86 +1,109 @@
-import Payment from '../model/Payment.js';
-import Member from '../model/Member.js';
+import Payment, { PAYMENT_METHODS } from '../model/Payment.js';
+import Member, { MEMBER_STATUSES } from '../model/Member.js';
+import { nextInvoiceNumber } from '../model/Counter.js';
+import { isObjectId } from '../middleware/validate.js';
+import { sendError } from '../utils/httpError.js';
 
-// Create a new payment
+// Record a payment (admin). Safe to retry: a repeated idempotencyKey returns the original record.
 export const createPayment = async (req, res) => {
-    const { memberId, amountPaid, paymentDate } = req.body;
+    const { memberId, amountPaid, paymentDate, method, note, idempotencyKey, memberStatus } = req.body || {};
+
+    if (!isObjectId(memberId)) {
+        return res.status(400).json({ message: 'A valid member is required' });
+    }
+    const amount = Number(amountPaid);
+    if (!Number.isFinite(amount) || amount <= 0) {
+        return res.status(400).json({ message: 'Amount must be greater than zero' });
+    }
+    const date = paymentDate ? new Date(paymentDate) : new Date();
+    if (Number.isNaN(date.getTime())) {
+        return res.status(400).json({ message: 'Invalid payment date' });
+    }
+    if (method !== undefined && !PAYMENT_METHODS.includes(method)) {
+        return res.status(400).json({ message: 'Invalid payment method' });
+    }
+    if (memberStatus !== undefined && !MEMBER_STATUSES.includes(memberStatus)) {
+        return res.status(400).json({ message: 'Invalid member status' });
+    }
+    if (idempotencyKey !== undefined && (typeof idempotencyKey !== 'string' || idempotencyKey.length > 100)) {
+        return res.status(400).json({ message: 'Invalid idempotency key' });
+    }
 
     try {
-        // Find the member to make sure the member exists
-        const member = await Member.findById(memberId);
-        if (!member) {
-            return res.status(404).json({ message: 'Member not found' });
+        if (idempotencyKey) {
+            const existing = await Payment.findOne({ idempotencyKey });
+            if (existing) return res.status(200).json({ message: 'Payment already recorded', payment: existing, duplicate: true });
         }
 
-        // Create the payment
-        const payment = new Payment({
-            member: memberId,
-            amountPaid,
-            paymentDate,
+        const member = await Member.findById(memberId);
+        if (!member) return res.status(404).json({ message: 'Member not found' });
+
+        const payment = await Payment.create({
+            member: member._id,
+            memberName: member.fullName,
+            amountPaid: amount,
+            paymentDate: date,
             chosenService: member.chosenService,
             plan: member.plan,
+            method: method || 'cash',
+            note,
+            idempotencyKey,
+            invoiceNumber: await nextInvoiceNumber(date),
+            recordedBy: req.auth?.id,
         });
 
-        // Save the payment
-        await payment.save();
-
-        // Send reminder if the member has reminder enabled
-        if (member.reminder) {
-            sendReminder(member); // You can implement this to send actual reminders via email/SMS
-        }
+        // Keep the member's "last paid" date in sync. Status changes only when the admin
+        // explicitly chooses one in the payment form; it is never changed implicitly.
+        const memberUpdate = { paidDate: date };
+        if (memberStatus) memberUpdate.status = memberStatus;
+        await Member.updateOne({ _id: member._id }, memberUpdate);
 
         res.status(201).json({ message: 'Payment created successfully', payment });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-// Get payments for a specific member
-export const getPaymentsForMember = async (req, res) => {
-    const { memberId } = req.params;
-
-    try {
-        // Find payments related to the member
-        const payments = await Payment.find({ member: memberId }).populate('member', 'fullName username');
-
-        if (!payments || payments.length === 0) {
-            return res.status(404).json({ message: 'No payments found for this member' });
+        // Two concurrent requests with the same key: the loser returns the winner's record.
+        if (error?.code === 11000 && error.keyPattern?.idempotencyKey) {
+            const existing = await Payment.findOne({ idempotencyKey });
+            return res.status(200).json({ message: 'Payment already recorded', payment: existing, duplicate: true });
         }
-
-        res.status(200).json({ payments });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        sendError(res, error, 'Server error');
     }
 };
 
-// Get all payment details of the members
-export const getAllPayment = async (req, res) => {
+const listPayments = (filter) =>
+    Payment.find(filter).sort({ paymentDate: -1, createdAt: -1 }).populate('member', 'fullName username reminder');
+
+// All payments (admin). Returns an empty list rather than 404 when there are none.
+export const getAllPayment = async (_req, res) => {
     try {
-      // Find all payments and populate the 'member' field with the 'fullName' field from the Member model
-      const payments = await Payment.find()
-        .populate('member', 'fullName')  // Populating member with only the 'fullName'
-        .exec();  // Use .exec() to execute the query
-  
-      if (!payments || payments.length === 0) {
-        return res.status(404).json({ message: 'No payments found' });
-      }
-  
-      // Respond with all payments including the member's fullName
-      res.status(200).json({ payments });
+        res.status(200).json({ payments: await listPayments({}) });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+        sendError(res, error);
     }
-  };
-  
-
-// Send reminder (e.g., email or SMS) to a member
-export const sendReminder = (member) => {
-    // Placeholder for sending reminders (email, SMS, etc.)
-    console.log(`Sending payment reminder to ${member.fullName} (${member.username})`);
-
-    // You can use an email service like SendGrid, or SMS service like Twilio to send the actual reminder.
-    // Implement the actual reminder functionality here.
 };
 
+export const getPaymentsForMember = async (req, res) => {
+    try {
+        res.status(200).json({ payments: await listPayments({ member: req.params.memberId }) });
+    } catch (error) {
+        sendError(res, error);
+    }
+};
+
+export const getPaymentById = async (req, res) => {
+    try {
+        const payment = await Payment.findById(req.params.id).populate('member', 'fullName username contactNumber');
+        if (!payment) return res.status(404).json({ message: 'Payment not found' });
+        res.status(200).json({ payment });
+    } catch (error) {
+        sendError(res, error);
+    }
+};
+
+// The logged-in member's own payment history.
+export const getMyPayments = async (req, res) => {
+    try {
+        res.status(200).json({ payments: await listPayments({ member: req.auth.id }) });
+    } catch (error) {
+        sendError(res, error);
+    }
+};

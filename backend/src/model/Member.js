@@ -1,255 +1,77 @@
-    // import mongoose from "mongoose";
-
-    // const addressSchema = new mongoose.Schema({
-    //     street: {
-    //         type: String,
-    //         required: true,
-    //     },
-    //     city: {
-    //         type: String,
-    //         required: true,
-    //     },
-    //     state: {
-    //         type: String,
-    //         required: true,
-    //     },
-    //     zipCode: {
-    //         type: String,
-    //         required: true,
-    //     },
-    // }, { _id: false }); // Prevent creating an _id for subdocuments
-
-    // const MemberSchema = new mongoose.Schema({
-    //     fullName: {
-    //         type: String,
-    //         required: true,
-    //     },
-    //     username: {
-    //         type: String,
-    //         required: true,
-    //         unique: true,
-    //         trim: true, // Trims whitespace
-    //     },
-    //     gender: {
-    //         type: String,
-    //         enum: ['male', 'female', 'other'],
-    //         required: true,
-    //     },
-    //     contactNumber: {
-    //         type: String,
-    //         required: true,
-    //         match: [/^\d{10}$/, 'Please enter a valid 10-digit contact number.'],
-    //     },
-    //     dateOfRegistration: {
-    //         type: Date,
-    //         required: false,
-    //         default: Date.now,
-    //     },
-    //     address: {
-    //         type: addressSchema,
-    //         required: true,
-    //     },
-    //     amount: {
-    //         type: Number,
-    //         required: false,
-    //         min: 0,
-    //     },
-    //     chosenService: {
-    //         type: String,
-    //         enum: ['Fitness', 'Sauna', 'Cardio'],
-    //         required: false,
-    //     },
-    //     plan: {
-    //         type: String,
-    //         enum: ['premium', 'standard', 'basic'],
-    //         required: false,
-    //     },
-    //     password: {
-    //         type: String,
-    //         required: true,
-    //         minlength: 6,
-    //     },
-    //     status: {
-    //         type: String,
-    //         enum: ['Active', 'Expired', 'Pending'],
-    //         required: true,
-    //     },
-    //     attendanceCount: {
-    //         type: Number,
-    //         default: 0,
-    //     },
-    //     initialWeight: {
-    //         type: Number,
-    //         default: 0,
-    //     },
-    //     currentWeight: {
-    //         type: Number,
-    //         default: 0,
-    //     },
-    //     initialBodyType: {
-    //         type: String,
-    //         default: '', // Can be values like 'Slim', 'Fat', etc.
-    //     },
-    //     currentBodyType: {
-    //         type: String,
-    //         default: '', // Can be values like 'Buffed', 'Bulked', etc.
-    //     },
-    //     progressDate: {
-    //         type: Date,
-    //         default: null, // This will store the date of last progress update
-    //     },
-    //     reminder: {
-    //         type: Boolean,
-    //         default: false,
-    //     },
-    //     paidDate: {
-    //         type: Date,
-    //         default: null,
-    //     },
-    
-    // }, { timestamps: true });
-
-    // // Optional: Index on username for faster lookup
-    // MemberSchema.index({ username: 1 });
-
-    // const Member = mongoose.model('Member', MemberSchema);
-    // export default Member;
-
-
-    import mongoose from "mongoose";
-import Payment from "./Payment.js"; // Assuming Payment schema is in the same directory
+import mongoose from "mongoose";
+import Payment from "./Payment.js";
+import { hashPassword, isBcryptHash } from "../utils/password.js";
+import { nextInvoiceNumber } from "./Counter.js";
 
 const addressSchema = new mongoose.Schema({
-    street: {
-        type: String,
-        required: true,
-    },
-    city: {
-        type: String,
-        required: true,
-    },
-    state: {
-        type: String,
-        required: true,
-    },
-    zipCode: {
-        type: String,
-        required: true,
-    },
-}, { _id: false }); // Prevent creating an _id for subdocuments
+    street: { type: String, required: true, trim: true },
+    city: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    zipCode: { type: String, required: true, trim: true },
+}, { _id: false });
+
+export const SERVICES = ['Fitness', 'Sauna', 'Cardio'];
+export const PLANS = ['premium', 'standard', 'basic'];
+export const MEMBER_STATUSES = ['Active', 'Expired', 'Pending'];
 
 const MemberSchema = new mongoose.Schema({
-    fullName: {
-        type: String,
-        required: true,
-    },
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true, // Trims whitespace
-    },
-    gender: {
-        type: String,
-        enum: ['male', 'female', 'other'],
-        required: true,
-    },
+    fullName: { type: String, required: true, trim: true },
+    username: { type: String, required: true, unique: true, trim: true },
+    gender: { type: String, enum: ['male', 'female', 'other'], required: true },
     contactNumber: {
         type: String,
         required: true,
         match: [/^\d{10}$/, 'Please enter a valid 10-digit contact number.'],
     },
-    dateOfRegistration: {
-        type: Date,
-        required: false,
-        default: Date.now,
+    dateOfRegistration: { type: Date, default: Date.now },
+    address: { type: addressSchema, required: true },
+    amount: { type: Number, min: 0 },
+    chosenService: { type: String, enum: SERVICES },
+    plan: { type: String, enum: PLANS },
+    // Never returned by queries unless explicitly selected with '+password'.
+    password: { type: String, required: true, minlength: 6, select: false },
+    status: { type: String, enum: MEMBER_STATUSES, required: true },
+    attendanceCount: { type: Number, default: 0, min: 0 },
+    initialWeight: { type: Number, default: 0, min: 0 },
+    currentWeight: { type: Number, default: 0, min: 0 },
+    initialBodyType: { type: String, default: '' },
+    currentBodyType: { type: String, default: '' },
+    progressDate: { type: Date, default: null },
+    reminder: { type: Boolean, default: false },
+    paidDate: { type: Date, default: null },
+}, {
+    timestamps: true,
+    toJSON: {
+        transform: (_doc, ret) => {
+            delete ret.password;
+            return ret;
+        },
     },
-    address: {
-        type: addressSchema,
-        required: true,
-    },
-    amount: {
-        type: Number,
-        required: false,
-        min: 0,
-    },
-    chosenService: {
-        type: String,
-        enum: ['Fitness', 'Sauna', 'Cardio'],
-        required: false,
-    },
-    plan: {
-        type: String,
-        enum: ['premium', 'standard', 'basic'],
-        required: false,
-    },
-    password: {
-        type: String,
-        required: true,
-        minlength: 6,
-    },
-    status: {
-        type: String,
-        enum: ['Active', 'Expired', 'Pending'],
-        required: true,
-    },
-    attendanceCount: {
-        type: Number,
-        default: 0,
-    },
-    initialWeight: {
-        type: Number,
-        default: 0,
-    },
-    currentWeight: {
-        type: Number,
-        default: 0,
-    },
-    initialBodyType: {
-        type: String,
-        default: '', // Can be values like 'Slim', 'Fat', etc.
-    },
-    currentBodyType: {
-        type: String,
-        default: '', // Can be values like 'Buffed', 'Bulked', etc.
-    },
-    progressDate: {
-        type: Date,
-        default: null, // This will store the date of last progress update
-    },
-    reminder: {
-        type: Boolean,
-        default: false,
-    },
-    paidDate: {
-        type: Date,
-        default: null,
-    },
+});
 
-}, { timestamps: true });
+// Hash plaintext passwords on create/change. Already-hashed values are left alone.
+MemberSchema.pre('save', async function () {
+    this.$locals.wasNew = this.isNew;
+    if (this.isModified('password') && !isBcryptHash(this.password)) {
+        this.password = await hashPassword(this.password);
+    }
+});
 
-// Optional: Index on username for faster lookup
-MemberSchema.index({ username: 1 });
-
-// Add a post-save hook to create the initial payment when a new member is saved
-MemberSchema.post('save', async function(doc) {
+// Create the initial payment record only when a member is first created with a plan
+// (previously this ran on every save, which would duplicate payments).
+MemberSchema.post('save', async function (doc) {
+    if (!doc.$locals.wasNew || !doc.plan || !doc.chosenService) return;
     try {
-        // Check if the member has an initial plan and service selected
-        if (doc.plan && doc.chosenService) {
-            // Create the payment with initial values
-            const initialPayment = new Payment({
-                member: doc._id,
-                amountPaid: doc.amount || 0,  // Assuming member's amount represents initial payment
-                paymentDate: doc.dateOfRegistration,
-                chosenService: doc.chosenService,
-                plan: doc.plan,
-                reminderSent: false,
-            });
-
-            // Save the payment document
-            await initialPayment.save();
-            console.log(`Initial payment created for member ${doc.fullName}`);
-        }
+        await Payment.create({
+            member: doc._id,
+            memberName: doc.fullName,
+            amountPaid: doc.amount || 0,
+            paymentDate: doc.paidDate || doc.dateOfRegistration,
+            chosenService: doc.chosenService,
+            plan: doc.plan,
+            note: 'Initial payment recorded at registration',
+            invoiceNumber: await nextInvoiceNumber(),
+        });
     } catch (error) {
         console.error('Error creating initial payment:', error);
     }

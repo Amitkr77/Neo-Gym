@@ -1,29 +1,19 @@
-// models/ContactUs.js
 import mongoose from 'mongoose'
 
 const contactSchema = new mongoose.Schema(
     {
-        firstName: {
-            type: String,
-            required: true,
-        },
-        lastName: {
-            type: String,
-            required: true,
-        },
+        firstName: { type: String, required: true, trim: true, maxlength: 60 },
+        lastName: { type: String, required: true, trim: true, maxlength: 60 },
         email: {
             type: String,
             required: true,
+            trim: true,
+            lowercase: true,
+            maxlength: 120,
             match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address"],
         },
-        phone: {
-            type: String,
-            required: false,
-        },
-        message: {
-            type: String,
-            required: true,
-        },
+        phone: { type: String, trim: true, maxlength: 20 },
+        message: { type: String, required: true, trim: true, maxlength: 2000 },
     },
     { timestamps: true }
 );

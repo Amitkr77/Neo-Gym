@@ -1,4 +1,5 @@
 import Equipment from "../model/Equipment.js";
+import { sendError } from "../utils/httpError.js";
 
 // Create new equipment
 export const createEquipment = async (req, res) => {
@@ -21,8 +22,7 @@ export const createEquipment = async (req, res) => {
     await newEquipment.save();
     res.status(201).json({ message: "Equipment created successfully", data: newEquipment });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to create equipment", error });
+    sendError(res, error, "Failed to create equipment");
   }
 };
 
@@ -32,8 +32,7 @@ export const getAllEquipment = async (req, res) => {
     const equipmentList = await Equipment.find();
     res.status(200).json({ data: equipmentList });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to fetch equipment", error });
+    sendError(res, error, "Failed to fetch equipment");
   }
 };
 
@@ -41,7 +40,7 @@ export const getAllEquipment = async (req, res) => {
 // Update equipment by ID
 export const updateEquipment = async (req, res) => {
   try {
-    const updatedEquipment = await Equipment.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedEquipment = await Equipment.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
 
     if (!updatedEquipment) {
       return res.status(404).json({ message: "Equipment not found" });
@@ -49,8 +48,7 @@ export const updateEquipment = async (req, res) => {
 
     res.status(200).json({ message: "Equipment updated successfully", data: updatedEquipment });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to update equipment", error });
+    sendError(res, error, "Failed to update equipment");
   }
 };
 
@@ -65,7 +63,6 @@ export const deleteEquipment = async (req, res) => {
 
     res.status(200).json({ message: "Equipment deleted successfully" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to delete equipment", error });
+    sendError(res, error, "Failed to delete equipment");
   }
 };
