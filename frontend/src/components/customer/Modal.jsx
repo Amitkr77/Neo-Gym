@@ -1,115 +1,100 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import FRONTEND_URL from "../../constant/const";
 
-const Modal = ({ user, setIsModalOpen }) => {
-  const [formData, setFormData] = useState(user);
+// Profile editor. Sends only the fields a member is allowed to change.
+const Modal = ({ user, onSaved, setIsModalOpen }) => {
+  const [formData, setFormData] = useState({
+    fullName: user.fullName || "",
+    username: user.username || "",
+    contactNumber: user.contactNumber || "",
+    address: { street: "", city: "", state: "", zipCode: "", ...(user.address || {}) },
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
+  // Close on Escape.
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && setIsModalOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [setIsModalOpen]);
 
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      address: {
-        ...formData.address,
-        [name]: value,
-      },
-    });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleAddressChange = (e) =>
+    setFormData({ ...formData, address: { ...formData.address, [e.target.name]: e.target.value } });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    if (!/^\d{10}$/.test(formData.contactNumber)) {
+      setError("Contact number must be exactly 10 digits.");
+      return;
+    }
+    setSaving(true);
     try {
-      const updatedData = {
-        ...formData, // Simplified using spread operator
-      };
-      const id = localStorage.getItem("userId");
-
-      await axios.put(`${FRONTEND_URL}/api/member/users/${id}`, updatedData);
-      alert("User details updated successfully");
+      const res = await axios.put(`${FRONTEND_URL}/api/member/me`, formData);
+      onSaved(res.data.user);
+      toast.success("Profile updated");
       setIsModalOpen(false);
-    } catch (error) {
-      console.error("Error updating user data", error);
-      alert("Failed to update user data");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update your details. Please try again.");
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 overflow-auto">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl p-8 transform transition-all duration-500 ease-in-out">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Update User Details</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Reuse form input styles from Customer component */}
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="profile-title"
+      onMouseDown={(e) => e.target === e.currentTarget && setIsModalOpen(false)}
+    >
+      <div className="rise max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-bone p-6 shadow-2xl sm:rounded-3xl sm:p-10">
+        <div className="mb-8 flex items-start justify-between gap-4">
           <div>
-            <label htmlFor="fullName" className="block text-lg font-medium text-gray-600">Full Name</label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              value={formData.fullName || ""}
-              onChange={handleChange}
-              className="w-full p-4 mt-2 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-            />
+            <p className="eyebrow text-stone-500">Profile</p>
+            <h2 id="profile-title" className="display mt-2 text-3xl">Update your <span className="accent text-ember-600">details</span></h2>
           </div>
-
-          <div>
-            <label htmlFor="username" className="block text-lg font-medium text-gray-600">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username || ""}
-              onChange={handleChange}
-              className="w-full p-4 mt-2 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-            />
-          </div>
-
-          {/* Address */}
-          <div>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-2">Address</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                id="street"
-                name="street"
-                value={formData.address?.street || ""}
-                onChange={handleAddressChange}
-                placeholder="Street"
-                className="w-full p-4 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-              />
-              <input
-                type="text"
-                id="city"
-                name="city"
-                value={formData.address?.city || ""}
-                onChange={handleAddressChange}
-                placeholder="City"
-                className="w-full p-4 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-              />
+          <button type="button" onClick={() => setIsModalOpen(false)} aria-label="Close" className="-mr-2 flex h-10 w-10 items-center justify-center rounded-full text-2xl hover:bg-ink/5">
+            ×
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label htmlFor="pf-fullName" className="field-label">Full name</label>
+              <input id="pf-fullName" name="fullName" value={formData.fullName} onChange={handleChange} className="field" required />
+            </div>
+            <div>
+              <label htmlFor="pf-username" className="field-label">Username</label>
+              <input id="pf-username" name="username" value={formData.username} onChange={handleChange} className="field" required />
+            </div>
+            <div>
+              <label htmlFor="pf-contact" className="field-label">Contact number</label>
+              <input id="pf-contact" name="contactNumber" inputMode="numeric" value={formData.contactNumber} onChange={handleChange} className="field" required />
             </div>
           </div>
+          <fieldset className="border-t border-ink/10 pt-6">
+            <legend className="eyebrow pr-3 text-stone-500">Address</legend>
+            <div className="mt-2 grid gap-5 sm:grid-cols-2">
+              {[["street", "Street"], ["city", "City"], ["state", "State"], ["zipCode", "PIN code"]].map(([key, label]) => (
+                <div key={key}>
+                  <label htmlFor={`pf-${key}`} className="field-label">{label}</label>
+                  <input id={`pf-${key}`} name={key} value={formData.address[key]} onChange={handleAddressChange} className="field" required />
+                </div>
+              ))}
+            </div>
+          </fieldset>
 
-          <div className="flex justify-between mt-6">
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="px-6 py-3 text-white bg-gray-500 hover:bg-gray-600 rounded-lg transition-all duration-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200"
-            >
-              Save Changes
-            </button>
+          {error && <p className="alert-error" role="alert">{error}</p>}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="btn-outline-dark">Cancel</button>
+            <button type="submit" disabled={saving} className="btn-dark">{saving ? "Saving…" : "Save changes"}</button>
           </div>
         </form>
       </div>

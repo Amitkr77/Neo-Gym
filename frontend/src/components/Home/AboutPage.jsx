@@ -1,115 +1,70 @@
-import React from "react";
-import bgImage from "../../assets/bgImage.jpg";
+import { Link } from "react-router-dom";
+import heroImage from "../../assets/hero.jpg";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
+import Reveal from "../ui/Reveal";
+import SectionHeading from "../ui/SectionHeading";
 
+const VALUES = [
+  { title: "Community first", body: "Whether you're new to fitness or a seasoned pro, you'll train alongside people who push each other forward." },
+  { title: "Coaching that listens", body: "Plans start from your goals and your starting point, and change as you progress." },
+  { title: "Everything you need", body: "The equipment, the expertise and the environment to help you reach your goals." },
+];
+
+// Unverified statistics ("30+ awards", "5000+ clients", "98% satisfaction", "10+ years") were
+// removed: AUDIT_REPORT CT-01. Add real figures here once confirmed by the owner.
 export default function AboutPage() {
   return (
     <>
       <Navbar />
-      <section className="py-24 bg-gray-300 h-screen">
-        <div className="w-full max-w-7xl px-4 md:px-5 lg:px-5 mx-auto">
-          <div className="lg:grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left Column - About NeoGym */}
-            <div className="text-center lg:text-left">
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                Welcome to NeoGym
+      <main>
+        <section className="bg-ink pb-24 pt-40 text-white sm:pb-32">
+          <div className="container-x">
+            <p className="eyebrow rise mb-6 flex items-center gap-3 text-stone-400">
+              <span className="h-px w-8 bg-ember" aria-hidden="true" /> About NeoGym
+            </p>
+            <h1 className="display rise max-w-5xl text-5xl sm:text-7xl lg:text-8xl" style={{ "--rise-delay": "80ms" }}>
+              Not just a gym. <span className="accent text-ember">A community.</span>
+            </h1>
+          </div>
+        </section>
+
+        <section className="bg-bone py-24 sm:py-32">
+          <div className="container-x grid items-center gap-14 lg:grid-cols-2">
+            <Reveal className="overflow-hidden rounded-2xl bg-ink">
+              <img src={heroImage} alt="A member training with dumbbells at NeoGym" className="aspect-[4/5] w-full object-cover object-[65%_center]" loading="lazy" />
+            </Reveal>
+            <Reveal delay={120}>
+              <h2 className="display text-4xl sm:text-5xl">
+                Welcome to <span className="accent text-ember-600">NeoGym</span>
               </h2>
-              <p className="text-lg text-gray-600 mb-8">
-                At NeoGym, we’re not just a gym – we’re a community. Whether
-                you’re new to fitness or a seasoned pro, we have the equipment,
-                the expertise, and the environment to help you achieve your
-                goals.
+              <p className="lead mt-8 text-stone-600">
+                At NeoGym, we&apos;re not just a gym: we&apos;re a community. Whether you&apos;re new to fitness or a
+                seasoned pro, we have the equipment, the expertise and the environment to help you achieve your goals.
               </p>
-
-              <div className="flex justify-center lg:justify-start gap-8 mb-10">
-                <div className="text-center">
-                  <h3 className="text-3xl font-semibold text-indigo-600">
-                    10+
-                  </h3>
-                  <p className="text-gray-500 text-sm">Years of Experience</p>
-                </div>
-                <div className="text-center">
-                  <h3 className="text-3xl font-semibold text-indigo-600">
-                    5000+
-                  </h3>
-                  <p className="text-gray-500 text-sm">Happy Members</p>
-                </div>
-              </div>
-
-              <div className="text-center lg:text-left">
-                <button className="inline-flex items-center px-8 py-3 text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-full shadow-lg transition-all duration-300 ease-in-out">
-                  Join Us Today
-                  <svg
-                    className="ml-2"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 18 18"
-                    fill="none"
-                  >
-                    <path
-                      d="M6.75265 4.49658L11.2528 8.99677L6.75 13.4996"
-                      stroke="#fff"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Right Column - Gym Image */}
-            <div className="relative rounded-xl overflow-hidden shadow-2xl">
-              <img
-                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
-                src={bgImage}
-                alt="NeoGym"
-              />
-            </div>
+              <Link to="/Signup" className="btn-dark mt-10">
+                Join Us Today <span aria-hidden="true">→</span>
+              </Link>
+            </Reveal>
           </div>
+        </section>
 
-          {/* Stats Section */}
-          <div className="mt-16 text-center">
-            <h3 className="text-3xl font-semibold text-gray-900 mb-6">
-              Our Achievements
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {/* Achievement 1 */}
-              <div className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out">
-                <h4 className="text-3xl font-semibold text-indigo-600 mb-2">
-                  30+
-                </h4>
-                <p className="text-gray-500 text-base">Awards & Recognitions</p>
-              </div>
-
-              {/* Achievement 2 */}
-              <div className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out">
-                <h4 className="text-3xl font-semibold text-indigo-600 mb-2">
-                  5000+
-                </h4>
-                <p className="text-gray-500 text-base">Happy Clients</p>
-              </div>
-
-              {/* Achievement 3 */}
-              <div className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out">
-                <h4 className="text-3xl font-semibold text-indigo-600 mb-2">
-                  98%
-                </h4>
-                <p className="text-gray-500 text-base">Client Satisfaction</p>
-              </div>
-
-              {/* Achievement 4 */}
-              <div className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out">
-                <h4 className="text-3xl font-semibold text-indigo-600 mb-2">
-                  10+
-                </h4>
-                <p className="text-gray-500 text-base">Years in Business</p>
-              </div>
-            </div>
+        <section className="bg-bone-200/60 py-24 sm:py-32">
+          <div className="container-x">
+            <SectionHeading index="—" eyebrow="What we stand for" title="Our" accent="values." />
+            <ol className="mt-16 grid gap-10 md:grid-cols-3">
+              {VALUES.map((v, i) => (
+                <Reveal as="li" key={v.title} delay={i * 100} className="border-t border-ink pt-8">
+                  <span className="font-serif text-4xl italic text-ember-600">0{i + 1}</span>
+                  <h3 className="display-sm mt-6 text-xl">{v.title}</h3>
+                  <p className="mt-3 leading-relaxed text-stone-600">{v.body}</p>
+                </Reveal>
+              ))}
+            </ol>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
+      <Footer />
     </>
   );
 }

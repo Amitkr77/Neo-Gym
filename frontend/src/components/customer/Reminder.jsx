@@ -1,72 +1,57 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import FRONTEND_URL from "../../constant/const";
+import { PageHeader, Panel } from "./ui";
 
+// Shows the logged-in member's own payment reminder.
 export default function Reminder() {
-  const [reminder, setReminder] = useState(null); // State to hold the reminder status
-  const [error, setError] = useState(null); // State for error handling
-  const [loading, setLoading] = useState(true); // State for loading status
-  const userId = "672cec3c41b32cfad25fbeb6"; // The user ID for fetching data
-
-  // API function to fetch reminder status
-  const fetchReminder = async () => {
-    try {
-      const response = await axios.get(`${FRONTEND_URL}/api/member/users/${userId}`);
-      setReminder(response.data.reminder);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch reminder data.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // API function to dismiss the reminder
-  const dismissReminder = async () => {
-    try {
-      const response = await axios.put(`${FRONTEND_URL}/api/member/users/${userId}/reminder`, {
-        reminder: false,
-      });
-      setReminder(response.data.reminder); // Update the reminder state
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to dismiss the reminder.");
-    }
-  };
+  const [reminder, setReminder] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchReminder();
-  }, []); // Run once on component mount
+    axios
+      .get(`${FRONTEND_URL}/api/member/me`)
+      .then((response) => setReminder(Boolean(response.data.reminder)))
+      .catch(() => setError("Failed to fetch reminder data."))
+      .finally(() => setLoading(false));
+  }, []);
 
-  // Conditional rendering
-  if (loading) return <div className="text-center py-4">Loading...</div>;
-  if (error) return <div className="text-center py-4 text-red-500">{error}</div>;
+  const dismissReminder = async () => {
+    try {
+      const response = await axios.put(`${FRONTEND_URL}/api/member/me/reminder/dismiss`);
+      setReminder(Boolean(response.data.reminder));
+    } catch {
+      setError("Failed to dismiss the reminder.");
+    }
+  };
 
   return (
-    <div className="w-full p-6 mx-auto mt-4">
-      {reminder === true ? (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
-          <h4 className="font-semibold text-lg">ALERT</h4>
-          <p>
-            Your current membership program is expiring soon. Please clear your payments before the due date to avoid service disruptions.
-            <br />
-            IT IS IMPORTANT THAT YOU CLEAR YOUR DUES ON TIME.
-          </p>
-          <hr className="my-2 border-t-2 border-red-300" />
-          <p className="text-sm">
-            We value you as our customer and look forward to serving you in the future.
-          </p>
-          {/* Dismiss Button */}
-          <button
-            onClick={dismissReminder}
-            className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-          >
-            Dismiss Alert
-          </button>
-        </div>
-      ) : (
-        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg">
-          <h4 className="font-semibold text-lg">NO REMINDERS YET!</h4>
-        </div>
-      )}
-    </div>
+    <>
+      <PageHeader eyebrow="Billing" title="Reminders" />
+      <Panel className="max-w-2xl">
+        {loading ? (
+          <p className="text-stone-500" role="status">Loading…</p>
+        ) : error ? (
+          <p className="alert-error">{error}</p>
+        ) : reminder ? (
+          <div role="alert" className="border-l-2 border-ember pl-6">
+            <p className="eyebrow text-ember-700">Action needed</p>
+            <h2 className="display-sm mt-3 text-2xl">Payment reminder</h2>
+            <p className="mt-3 leading-relaxed text-stone-600">
+              Your membership payment is due soon. Please clear your dues before the due date to avoid any
+              interruption to your access.
+            </p>
+            <button onClick={dismissReminder} className="btn-outline-dark mt-6">Dismiss</button>
+          </div>
+        ) : (
+          <div className="border-l-2 border-emerald-600 pl-6">
+            <p className="eyebrow text-emerald-800">All clear</p>
+            <h2 className="display-sm mt-3 text-2xl">No reminders right now</h2>
+            <p className="mt-3 text-stone-600">You&apos;re all set. We&apos;ll show payment reminders here.</p>
+          </div>
+        )}
+      </Panel>
+    </>
   );
 }

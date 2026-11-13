@@ -1,13 +1,11 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { FiUser, FiMail, FiLock, FiPhone, FiMapPin } from "react-icons/fi";
-import { FaUserPlus } from "react-icons/fa";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import FRONTEND_URL from "../../constant/const";
+import AuthLayout from "./AuthLayout";
 
+const STEPS = ["Your details", "Your address"];
 
 const SignUpPage = () => {
   const [step, setStep] = useState(1);
@@ -19,223 +17,142 @@ const SignUpPage = () => {
   const [address, setAddress] = useState({ street: "", city: "", state: "", zipCode: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const navigate = useNavigate();
 
-  // Step change handlers
+  // Validate step 1 before moving on (its inputs are unmounted on step 2, so the
+  // browser cannot validate them at submit time).
   const handleNextStep = () => {
-    setStep(step + 1);
-  };
-
-  const handlePreviousStep = () => {
-    setStep(step - 1);
+    const problem = !fullName.trim() || !username.trim()
+      ? "Please enter your full name and a username."
+      : password.length < 6
+        ? "Password must be at least 6 characters long."
+        : !/^\d{10}$/.test(contactNumber)
+          ? "Contact number must be exactly 10 digits."
+          : null;
+    setError(problem);
+    if (!problem) setStep(2);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
     setError(null);
-
-    const memberDetails = {
-      username,
-      password,
-      fullName,
-      contactNumber,
-      gender,
-      address,
-      dateOfRegistration: new Date(), // Automatically set date of registration
-      status: "Active", // Default to 'Active'
-    };
-    console.log(memberDetails)
-
     try {
-      const res = await axios.post(`${FRONTEND_URL}/api/auth/signup`, memberDetails, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      toast.success("Registration successful!", {
-         position: "top-center",
-      });
-      navigate("/login"); // Redirect to login page
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || "Error during registration. Please try again.";
-      setError(errorMessage);
-      toast.error(errorMessage,{
-        position: "top-center",
-      });
-      console.error("Error during signup:", error);
+      await axios.post(`${FRONTEND_URL}/api/auth/signup`, { username, password, fullName, contactNumber, gender, address });
+      toast.success("Account created! Log in, then visit the front desk to choose your plan.");
+      navigate("/login");
+    } catch (err) {
+      setError(err.response?.data?.message || "Error during registration. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const setAddr = (key) => (e) => setAddress({ ...address, [key]: e.target.value });
+
   return (
-    <div className="min-h-screen bg-gradient-to-r from-[#ff7e5f] to-[#feb47b] flex justify-center items-center relative">
-      <Link to="/" className="absolute top-4 left-4 text-white text-3xl font-bold hover:text-[#ff7e5f] transition">
-        &times;
-      </Link>
+    <AuthLayout
+      eyebrow="Join NeoGym"
+      title="Create your"
+      accent="account"
+      aside="Sign up online, then choose your plan with our team at the front desk."
+    >
+      {/* Step indicator */}
+      <ol className="mb-8 grid grid-cols-2 gap-3" aria-label={`Step ${step} of 2`}>
+        {STEPS.map((label, i) => (
+          <li key={label}>
+            <span className={`block h-1 rounded-full transition-colors duration-500 ${step > i ? "bg-ember" : "bg-ink/10"}`} />
+            <span className={`mt-2 block text-xs font-medium ${step === i + 1 ? "text-ink" : "text-stone-500"}`}>
+              {i + 1}. {label}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p className="sr-only" aria-live="polite">Step {step} of 2</p>
 
-      <motion.div
-        className="bg-white p-10 rounded-xl shadow-xl max-w-lg w-full"
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h2 className="text-3xl font-extrabold text-[#1E3A8A] text-center mb-6">Sign Up as Customer</h2>
-
-        <form onSubmit={handleSubmit}>
-          {/* Step 1: Basic Info */}
-          {step === 1 && (
-            <>
-              <div className="mb-6">
-                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">Full Name</label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Enter your full name"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {step === 1 && (
+          <>
+            <div>
+              <label htmlFor="fullName" className="field-label">Full name</label>
+              <input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)}
+                placeholder="Enter your full name" autoComplete="name" className="field" required />
+            </div>
+            <div>
+              <label htmlFor="username" className="field-label">Username</label>
+              <input id="username" value={username} onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username" autoComplete="username" className="field" required />
+            </div>
+            <div>
+              <label htmlFor="password" className="field-label">Password</label>
+              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 6 characters" autoComplete="new-password" className="field" required />
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="contactNumber" className="field-label">Mobile number</label>
+                <input id="contactNumber" type="tel" inputMode="numeric" maxLength={10} value={contactNumber}
+                  onChange={(e) => setContactNumber(e.target.value)} placeholder="10-digit mobile number"
+                  autoComplete="tel-national" className="field" required />
               </div>
-
-              <div className="mb-6">
-                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">Username</label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">Contact Number</label>
-                <input
-                  type="text"
-                  value={contactNumber}
-                  onChange={(e) => setContactNumber(e.target.value)}
-                  placeholder="Enter your contact number"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">Gender</label>
-                <select
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                >
+              <div>
+                <label htmlFor="gender" className="field-label">Gender</label>
+                <select id="gender" value={gender} onChange={(e) => setGender(e.target.value)} className="field">
                   <option value="male">Male</option>
                   <option value="female">Female</option>
                   <option value="other">Other</option>
                 </select>
               </div>
+            </div>
+            {error && <p className="alert-error" role="alert">{error}</p>}
+            <button type="button" className="btn-dark w-full py-4" onClick={handleNextStep}>
+              Next Step <span aria-hidden="true">→</span>
+            </button>
+          </>
+        )}
 
-              <motion.button
-                type="button"
-                className="w-full py-3 mt-6 bg-[#ff7e5f] text-white text-xl font-semibold rounded-full transition duration-300 hover:bg-[#ff5a4e]"
-                onClick={handleNextStep}
-              >
-                Next Step
-              </motion.button>
-            </>
-          )}
-
-          {/* Step 2: Address Info */}
-          {step === 2 && (
-            <>
-              <div className="mb-6">
-                <h1 className="font-bold mb-2 text-lg">Address</h1>
-                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">Street </label>
-                <input
-                  type="text"
-                  value={address.street}
-                  onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                  placeholder="Enter your street address"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
+        {step === 2 && (
+          <>
+            <div>
+              <label htmlFor="street" className="field-label">Street</label>
+              <input id="street" value={address.street} onChange={setAddr("street")}
+                placeholder="Enter your street address" autoComplete="street-address" className="field" required />
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="city" className="field-label">City</label>
+                <input id="city" value={address.city} onChange={setAddr("city")}
+                  placeholder="Enter your city" autoComplete="address-level2" className="field" required />
               </div>
-
-              <div className="mb-6">
-                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">City</label>
-                <input
-                  type="text"
-                  value={address.city}
-                  onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                  placeholder="Enter your city"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
+              <div>
+                <label htmlFor="state" className="field-label">State</label>
+                <input id="state" value={address.state} onChange={setAddr("state")}
+                  placeholder="Enter your state" autoComplete="address-level1" className="field" required />
               </div>
-
-              <div className="mb-6">
-                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">State</label>
-                <input
-                  type="text"
-                  value={address.state}
-                  onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                  placeholder="Enter your state"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-lg font-medium text-[#1E3A8A] mb-2">Zip Code</label>
-                <input
-                  type="text"
-                  value={address.zipCode}
-                  onChange={(e) => setAddress({ ...address, zipCode: e.target.value })}
-                  placeholder="Enter your zip code"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
-              </div>
-
-              <motion.button
-                type="button"
-                className="w-full py-3 mt-6 bg-[#ff7e5f] text-white text-xl font-semibold rounded-full transition duration-300 hover:bg-[#ff5a4e]"
-                onClick={handlePreviousStep}
-              >
+            </div>
+            <div>
+              <label htmlFor="zipCode" className="field-label">PIN code</label>
+              <input id="zipCode" inputMode="numeric" value={address.zipCode} onChange={setAddr("zipCode")}
+                placeholder="6-digit PIN code" autoComplete="postal-code" className="field" required />
+            </div>
+            {error && <p className="alert-error" role="alert">{error}</p>}
+            <div className="grid grid-cols-[auto_1fr] gap-3">
+              <button type="button" className="btn-outline-dark py-4" onClick={() => { setError(null); setStep(1); }}>
                 Back
-              </motion.button>
-              <motion.button
-                type="submit"
-                className="w-full py-3 mt-6 bg-[#ff7e5f] text-white text-xl font-semibold rounded-full transition duration-300 hover:bg-[#ff5a4e]"
-                disabled={loading}
-              >
+              </button>
+              <button type="submit" className="btn-dark py-4" disabled={loading}>
                 {loading ? "Submitting..." : "Submit"}
-              </motion.button>
-            </>
-          )}
+              </button>
+            </div>
+          </>
+        )}
+      </form>
 
-          {/* Display Error Message */}
-          {error && <div className="text-red-500 text-sm mt-4">{error}</div>}
-        </form>
-      </motion.div>
-    </div>
+      <p className="mt-8 text-center text-sm text-stone-600">
+        Already a member?{" "}
+        <Link to="/login" className="link-underline tap-inline px-1 font-semibold text-ink">Log in</Link>
+      </p>
+    </AuthLayout>
   );
 };
 

@@ -1,106 +1,74 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import FRONTEND_URL from "../../constant/const";
+import { PageHeader, Panel } from "./ui";
 
 export default function Todo() {
   const [taskDesc, setTaskDesc] = useState("");
   const [taskStatus, setTaskStatus] = useState("In Progress");
   const [statusMessage, setStatusMessage] = useState("");
+  const [isError, setIsError] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleTaskDescChange = (e) => {
-    setTaskDesc(e.target.value);
-  };
-
-  const handleTaskStatusChange = (e) => {
-    setTaskStatus(e.target.value);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Perform form validation
-    if (!taskDesc || !taskStatus) {
-      setStatusMessage("Please fill in all fields.");
+    if (taskDesc.trim().length < 5) {
+      setIsError(true);
+      setStatusMessage("Please describe the task in at least 5 characters.");
       return;
     }
-
-    // Data to send to the server
-    const taskData = { taskDesc, taskStatus };
-
-    // Send the data using Axios
-    axios
-      .post(`${FRONTEND_URL}/api/task`, taskData)
-      .then((response) => {
-        // Handle success response
-        console.log("Task added:", response.data);
-        setStatusMessage("Task added successfully!");
-        setTaskDesc("");
-        setTaskStatus("In Progress");
-      })
-      .catch((error) => {
-        // Handle error
-        console.error("Error adding task:", error);
-        setStatusMessage("Error adding task. Please try again.");
-      });
+    setSaving(true);
+    try {
+      await axios.post(`${FRONTEND_URL}/api/task`, { taskDesc, taskStatus });
+      setIsError(false);
+      setStatusMessage("Task added! You can see it on your dashboard.");
+      setTaskDesc("");
+      setTaskStatus("In Progress");
+    } catch (error) {
+      setIsError(true);
+      setStatusMessage(error.response?.data?.message || "Error adding task. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="border p-6 w-full  mx-auto rounded-lg shadow-lg bg-white">
-      <div className="flex items-center space-x-2 mb-6">
-        <span className="text-blue-500 text-2xl">
-          <i className="fas fa-check-circle"></i>{" "}
-          {/* Add any icon if you prefer */}
-        </span>
-        <h5 className="text-xl font-semibold text-gray-800">To-Do Lists</h5>
-      </div>
-      <div className="border p-4 rounded-lg shadow-sm bg-gray-50">
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Please Enter Your Task:
-            </label>
+    <>
+      <PageHeader eyebrow="Planning" title="To-do" accent="list" />
+      <Panel className="max-w-2xl">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="task_desc" className="field-label">What&apos;s the plan?</label>
             <input
+              id="task_desc"
               type="text"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
               name="task_desc"
-              placeholder="I'll be doing 12 set up and . . ."
+              className="field"
+              placeholder="e.g. 4 × 10 squats, 20 min incline walk"
               value={taskDesc}
-              onChange={handleTaskDescChange}
+              onChange={(e) => setTaskDesc(e.target.value)}
+              maxLength={300}
             />
           </div>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Please Select a Status:
-            </label>
-            <select
-              name="task_status"
-              value={taskStatus}
-              onChange={handleTaskStatusChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              required
-            >
+          <div>
+            <label htmlFor="task_status" className="field-label">Status</label>
+            <select id="task_status" name="task_status" value={taskStatus} onChange={(e) => setTaskStatus(e.target.value)} className="field">
               <option value="In Progress">In Progress</option>
               <option value="Pending">Pending</option>
             </select>
           </div>
-
-          <div className="mb-4">
-            <button
-              type="submit"
-              className=" px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 ease-in-out"
-            >
-              Add To List
-            </button>
-          </div>
-
+          <button type="submit" className="btn-dark" disabled={saving}>
+            {saving ? "Adding…" : "Add To List"}
+          </button>
           {statusMessage && (
-            <div id="status" className="text-sm text-green-500">
-              {statusMessage}
-            </div>
+            <p className={isError ? "alert-error" : "alert-success"} role="status">
+              {statusMessage}{" "}
+              {!isError && <Link to="/Customer/dashboard" className="font-semibold underline">View tasks</Link>}
+            </p>
           )}
         </form>
-      </div>
-    </div>
+      </Panel>
+    </>
   );
 }
