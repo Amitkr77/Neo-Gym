@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import Logo from "../ui/Logo";
+import { pauseSmoothScroll, resumeSmoothScroll } from "../../lib/smoothScroll";
 
 const LINKS = [
   { to: "/#programs", label: "Programs" },
@@ -15,9 +16,29 @@ const Navbar = ({ overlay = false }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
+  const [hidden, setHidden] = useState(false);
+
+  // One rAF-throttled read per frame. Hides the bar while reading downward (more room for the
+  // page) and brings it back the moment the user scrolls up or nears the top.
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
+    let lastY = window.scrollY;
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const y = window.scrollY;
+      setScrolled(y > 24);
+      if (Math.abs(y - lastY) > 6) {
+        setHidden(y > lastY && y > 480);
+        lastY = y;
+      }
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -26,7 +47,12 @@ const Navbar = ({ overlay = false }) => {
   useEffect(() => setMenuOpen(false), [location.pathname, location.hash]);
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (menuOpen) pauseSmoothScroll();
+    else resumeSmoothScroll();
+    return () => {
+      document.body.style.overflow = "";
+      resumeSmoothScroll();
+    };
   }, [menuOpen]);
 
   const solid = !overlay || scrolled || menuOpen;
@@ -34,7 +60,11 @@ const Navbar = ({ overlay = false }) => {
   return (
     <>
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-500 ease-premium ${
+      // keyboard users tabbing into a hidden bar get it back immediately
+      onFocusCapture={() => setHidden(false)}
+      className={`fixed inset-x-0 top-0 z-50 transition-[background-color,transform] duration-500 ease-premium ${
+        hidden && !menuOpen ? "-translate-y-full" : "translate-y-0"
+      } ${
         solid ? "bg-ink/90 backdrop-blur-md border-b border-white/5" : "bg-transparent"
       }`}
     >
@@ -46,7 +76,7 @@ const Navbar = ({ overlay = false }) => {
             <li key={label}>
               <NavLink
                 to={to}
-                className="link-underline tap text-sm font-medium text-white/80 transition-colors hover:text-white"
+                className="link-underline tap eyebrow text-[0.72rem] text-white/75 transition-colors hover:text-white"
               >
                 {label}
               </NavLink>
