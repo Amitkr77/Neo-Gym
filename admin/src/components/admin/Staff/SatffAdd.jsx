@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
-import FRONTEND_URL from '../../../../../frontend/src/constant/const';
+import FRONTEND_URL from "../../../constant/const";
 
 const StaffAdd = () => {
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     fullname: '',
     username: '',
-    password: '',
-    password2: '',
     email: '',
     address: {
       street: '',
@@ -44,11 +46,12 @@ const StaffAdd = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate passwords
-    if (formData.password !== formData.password2) {
-      alert('Passwords do not match!');
+    setError('');
+    if (!/^[0-9]{10,15}$/.test(formData.contact)) {
+      setError('Contact number must be 10 to 15 digits.');
       return;
     }
+    setSubmitting(true);
 
     // Ensure address is properly formatted
     const { street, city, state, zipcode } = formData.address;
@@ -57,7 +60,6 @@ const StaffAdd = () => {
     const requestData = {
       fullname: formData.fullname,
       username: formData.username,
-      password: formData.password,  // Assuming password is handled separately
       email: formData.email,
       gender: formData.gender,
       designation: formData.designation,
@@ -67,14 +69,12 @@ const StaffAdd = () => {
 
     try {
       // Send form data to backend
-      const response = await axios.post(`${FRONTEND_URL}/api/staff`, requestData);
-      console.log('Staff added successfully:', response.data);
-      // Optionally clear the form after submission
+      await axios.post(`${FRONTEND_URL}/api/staff`, requestData);
+      toast.success(`${formData.fullname} added to staff`);
+      setStep(1);
       setFormData({
         fullname: '',
         username: '',
-        password: '',
-        password2: '',
         email: '',
         address: {
           street: '',
@@ -86,9 +86,10 @@ const StaffAdd = () => {
         gender: 'male',
         contact: '',
       });
-    } catch (error) {
-      console.error('Error adding staff:', error);
-      console.error('Error details:', error.response.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not add the staff member. Please check the details.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -101,8 +102,10 @@ const StaffAdd = () => {
         <span className="text-blue-500 text-2xl mr-2">
           <i className="fas fa-briefcase"></i>
         </span>
-        <h5 className="text-xl font-bold">Staff Details</h5>
+        <h1 className="text-xl font-bold">Add staff member</h1>
+        <Link to="/admin/staffManagement/StaffList" className="ml-auto text-blue-600 underline text-sm">Back to staff list</Link>
       </div>
+      {error && <p className="mb-4 p-3 rounded bg-red-50 text-red-700" role="alert">{error}</p>}
 
       <div className="widget-content">
         <form id="form-wizard" onSubmit={handleSubmit} className="form-horizontal">
@@ -154,35 +157,9 @@ const StaffAdd = () => {
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold mb-2" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-300"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold mb-2" htmlFor="password2">
-                  Confirm Password
-                </label>
-                <input
-                  id="password2"
-                  type="password"
-                  name="password2"
-                  required
-                  value={formData.password2}
-                  onChange={handleChange}
-                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring focus:ring-blue-300"
-                />
-              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                Staff records are for the gym's roster. Staff logins are not available yet.
+              </p>
             </div>
           )}
 
@@ -240,7 +217,7 @@ const StaffAdd = () => {
                 {/* Zipcode */}
                 <div className="mb-4">
                   <label className="block text-gray-700 font-semibold mb-2" htmlFor="address.zipcode">
-                    Zipcode
+                    PIN / ZIP code
                   </label>
                   <input
                     id="address.zipcode"
@@ -332,8 +309,9 @@ const StaffAdd = () => {
               <button
                 className="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600 transition"
                 type="submit"
+                disabled={submitting}
               >
-                Submit
+                {submitting ? 'Saving…' : 'Submit'}
               </button>
             )}
           </div>

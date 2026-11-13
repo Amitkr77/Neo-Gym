@@ -1,32 +1,38 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Home from "./components/Home/Home";
 import Customer from "./components/customer/Customer";
 import LoginPage from "./components/Auth/LoginPage";
 import SignUpPage from "./components/Auth/SignUpPage";
-import { ToastContainer } from "react-toastify";
 import ContactUs from "./components/Home/ContactUs";
 import AboutPage from "./components/Home/AboutPage";
 import ForgotPassword from "./components/Auth/ForgotPassword";
-
-// Import other components if needed, e.g., Home, OtherComponent
+import RequireMember from "./components/Auth/RequireMember";
+import NotFound from "./components/Home/NotFound";
+import ScrollManager from "./components/ui/ScrollManager";
 
 function App() {
   return (
     <Router>
-      <ToastContainer />
+      <ScrollManager />
+      <ToastContainer position="bottom-right" theme="dark" hideProgressBar />
       <Routes>
-        {/* Other routes can be defined here, e.g., a home route */}
         <Route path="/" element={<Home />} />
-
-        {/* Nested Admin routes */}
-
-        <Route path="/Customer/*" element={<Customer />} />
+        <Route
+          path="/Customer/*"
+          element={
+            <RequireMember>
+              <Customer />
+            </RequireMember>
+          }
+        />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/Signup" element={<SignUpPage />} />
         <Route path="/contactUs" element={<ContactUs />} />
         <Route path="/AboutPage" element={<AboutPage />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

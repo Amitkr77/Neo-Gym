@@ -29,6 +29,9 @@ export default [
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
       'react/jsx-no-target-blank': 'off',
+      // The project does not use PropTypes (no TypeScript either); props are documented inline.
+      'react/prop-types': 'off',
+      'react/no-unescaped-entities': 'warn',
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

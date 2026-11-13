@@ -1,26 +1,31 @@
-import React from 'react';
+import { Link } from "react-router-dom";
+import Reveal from "../ui/Reveal";
 
-const CTA = () => {
-  return (
-    <section className="py-24 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-600 text-white text-center">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Heading */}
-        <h2 className="text-4xl font-extrabold mb-4 sm:text-5xl leading-tight tracking-tight">
-          Ready to Begin Your Fitness Journey?
+const CTA = () => (
+  <section className="relative overflow-hidden bg-ember text-ink">
+    <div className="container-x py-24 sm:py-32">
+      <Reveal>
+        <p className="eyebrow mb-6 text-ink/70">Your next chapter</p>
+        <h2 className="display max-w-4xl text-5xl sm:text-7xl lg:text-8xl">
+          Ready to <span className="accent">begin?</span>
         </h2>
-        
-        {/* Subheading */}
-        <p className="text-lg sm:text-xl mb-10 text-opacity-85">
-          Join our community today and take your fitness to the next level. Start building a healthier, stronger you.
-        </p>
-
-        {/* Call to Action Button */}
-        <button className="bg-transparent border-2 border-white text-lg py-3 px-8 rounded-full text-white hover:bg-white hover:text-gray-800 transition duration-300 ease-in-out transform hover:scale-105">
-          Get Started Now
-        </button>
-      </div>
-    </section>
-  );
-};
+        <div className="mt-12 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+          <p className="max-w-md text-lg leading-relaxed text-ink/80">
+            Join our community today and take your fitness to the next level. Start building a healthier, stronger you.
+          </p>
+          <Link to="/Signup" className="btn bg-ink px-8 py-4 text-bone hover:bg-ink-700">
+            Get Started Now <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      </Reveal>
+    </div>
+    <span
+      className="display pointer-events-none absolute -bottom-10 right-0 select-none text-[11rem] leading-none text-ink/10 sm:text-[16rem]"
+      aria-hidden="true"
+    >
+      Neo
+    </span>
+  </section>
+);
 
 export default CTA;

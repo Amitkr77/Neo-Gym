@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import FRONTEND_URL from "../../../constant/const";
 
 const API_URL = `${FRONTEND_URL}/api/announcement`;

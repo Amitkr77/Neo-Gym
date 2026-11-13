@@ -1,84 +1,63 @@
 import Task from "../model/taskSchema.js";
+import { sendError } from "../utils/httpError.js";
 
-// Create a new task
+// All task operations are scoped to the logged-in member (req.auth.id).
+// Previously tasks were global: any member could see and delete everyone's tasks.
+const own = (req, extra = {}) => ({ owner: req.auth.id, ...extra });
+
 export const createTask = async (req, res) => {
+  const { taskDesc, taskStatus } = req.body || {};
+  if (typeof taskDesc !== 'string' || typeof taskStatus !== 'string') {
+    return res.status(400).json({ message: 'Both task description and status are required.' });
+  }
   try {
-    const { taskDesc, taskStatus } = req.body;
-
-    if (!taskDesc || !taskStatus) {
-      return res.status(400).json({ message: 'Both task description and status are required.' });
-    }
-
-    const newTask = new Task({
-      taskDesc,
-      taskStatus,
-    });
-
-    await newTask.save();
+    const newTask = await Task.create(own(req, { taskDesc, taskStatus }));
     res.status(201).json(newTask);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to create task', error: error.message });
+    sendError(res, error, 'Failed to create task');
   }
 };
 
-// Get all tasks
 export const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find();
-    res.status(200).json(tasks);
+    res.status(200).json(await Task.find(own(req)).sort({ createdAt: -1 }));
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to fetch tasks', error: error.message });
+    sendError(res, error, 'Failed to fetch tasks');
   }
 };
 
-// Get a single task by ID
 export const getTaskById = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
+    const task = await Task.findOne(own(req, { _id: req.params.id }));
+    if (!task) return res.status(404).json({ message: 'Task not found' });
     res.status(200).json(task);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to fetch task', error: error.message });
+    sendError(res, error, 'Failed to fetch task');
   }
 };
 
-// Update a task by ID
 export const updateTask = async (req, res) => {
+  const update = {};
+  if (typeof req.body?.taskDesc === 'string') update.taskDesc = req.body.taskDesc;
+  if (typeof req.body?.taskStatus === 'string') update.taskStatus = req.body.taskStatus;
   try {
-    const { taskDesc, taskStatus } = req.body;
-
-    const task = await Task.findByIdAndUpdate(
-      req.params.id,
-      { taskDesc, taskStatus },
-      { new: true } // This option returns the updated document
-    );
-
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
-
+    const task = await Task.findOneAndUpdate(own(req, { _id: req.params.id }), update, {
+      new: true,
+      runValidators: true,
+    });
+    if (!task) return res.status(404).json({ message: 'Task not found' });
     res.status(200).json(task);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to update task', error: error.message });
+    sendError(res, error, 'Failed to update task');
   }
 };
 
-// Delete a task by ID
 export const deleteTask = async (req, res) => {
   try {
-    const task = await Task.findByIdAndDelete(req.params.id);
-    if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
-    }
+    const task = await Task.findOneAndDelete(own(req, { _id: req.params.id }));
+    if (!task) return res.status(404).json({ message: 'Task not found' });
     res.status(200).json({ message: 'Task deleted successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to delete task', error: error.message });
+    sendError(res, error, 'Failed to delete task');
   }
 };

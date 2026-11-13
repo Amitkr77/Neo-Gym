@@ -1,3 +1,161 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ---------- Base ---------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bone text-ink font-sans antialiased;
+    font-feature-settings: "ss01", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    @apply bg-ember text-white;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-ember ring-offset-2 ring-offset-bone;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* ---------- Design system components ---------- */
+@layer components {
+  /* Content column: 1216px, widening to 1408px on large desktop monitors (2xl, 1536px+). */
+  .container-x {
+    @apply mx-auto w-full max-w-content px-5 sm:px-8 lg:px-10 2xl:max-w-[88rem];
+  }
+
+  /* Display type: Archivo, expanded width, heavy, tight */
+  .display {
+    @apply font-display font-extrabold uppercase leading-[0.92] tracking-tight;
+    font-stretch: 118%;
+  }
+  .display-sm {
+    @apply font-display font-bold uppercase leading-none tracking-tight;
+    font-stretch: 112%;
+  }
+  /* Editorial accent: Instrument Serif italic, used for one or two words only */
+  .accent {
+    @apply font-serif font-normal italic normal-case tracking-normal;
+    font-stretch: 100%;
+  }
+  .eyebrow {
+    @apply font-sans text-xs font-semibold uppercase tracking-eyebrow; /* 12px minimum for legibility */
+  }
+  .lead {
+    @apply text-lg leading-relaxed sm:text-xl;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 whitespace-nowrap rounded-full px-6 py-3 text-[0.95rem] font-semibold
+      transition duration-300 ease-premium disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-ember text-ink hover:bg-ember-400 active:scale-[0.98]; /* ink on ember: 6.3:1 (AA) */
+  }
+  .btn-dark {
+    @apply btn bg-ink text-bone hover:bg-ink-700 active:scale-[0.98];
+  }
+  .btn-outline-light {
+    @apply btn border border-white/30 text-white hover:border-white hover:bg-white hover:text-ink;
+  }
+  .btn-outline-dark {
+    @apply btn border border-ink/20 text-ink hover:border-ink hover:bg-ink hover:text-bone;
+  }
+  /* Tap targets: standalone links get a 44px-tall hit area; links inside sentences get extra
+     vertical hit area without changing the line layout. */
+  .tap {
+    @apply inline-flex min-h-[44px] items-center;
+  }
+  .tap-inline {
+    @apply -my-3 inline-block py-3;
+  }
+
+  /* Hover underline drawn on the text itself, so it stays under the words whatever the
+     size of the tap area. */
+  .link-underline {
+    @apply underline decoration-transparent decoration-1 underline-offset-[5px] transition-[text-decoration-color] duration-300 hover:decoration-current;
+  }
+
+  /* Forms */
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+  .field {
+    @apply w-full rounded-xl border border-ink/15 bg-white px-4 py-3 text-[0.95rem] text-ink
+      placeholder:text-stone-500 transition focus:border-ink focus:outline-none focus:ring-4 focus:ring-ink/5;
+  }
+  .field-error {
+    @apply mt-1.5 text-sm text-ember-700;
+  }
+
+  /* Surfaces */
+  .card {
+    @apply rounded-2xl border border-ink/10 bg-white;
+  }
+  .rule {
+    @apply border-t border-ink/10;
+  }
+
+  /* Status / alerts */
+  .alert-error {
+    @apply rounded-xl border border-ember/30 bg-ember/5 px-4 py-3 text-sm text-ember-700;
+  }
+  .alert-success {
+    @apply rounded-xl border border-emerald-600/25 bg-emerald-50 px-4 py-3 text-sm text-emerald-800;
+  }
+  .alert-info {
+    @apply rounded-xl border border-amber-600/25 bg-amber-50 px-4 py-3 text-sm text-amber-900;
+  }
+}
+
+/* ---------- Motion ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 38s linear infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+.rise {
+  animation: rise 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .marquee-track, .rise { animation: none; }
+}
+
+/* Toast theming to match the design system */
+.Toastify__toast {
+  @apply rounded-xl font-sans text-sm;
+}

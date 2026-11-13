@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"; // Import React
+import { useEffect, useState } from "react";
 import {
   Card,
   CardHeader,
@@ -7,7 +7,7 @@ import {
 } from "@material-tailwind/react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import FRONTEND_URL from "../../../constant/const";
+import FRONTEND_URL, { CURRENCY } from "../../../constant/const";
 
 // Sample data for the equipment table
 const EQUIPMENT_TABLE_HEAD = [
@@ -62,9 +62,6 @@ export function EquipmentList() {
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
-  // Check if equipmentData is empty and show message if so
-  if (equipmentData.length === 0) return <div>No equipment available</div>;
-
   return (
     <Card className=" w-full p-6">
       <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -105,13 +102,20 @@ export function EquipmentList() {
             </tr>
           </thead>
           <tbody>
+            {equipmentData.length === 0 && (
+              <tr>
+                <td colSpan={EQUIPMENT_TABLE_HEAD.length} className="text-center p-6 text-gray-500">
+                  No equipment recorded yet. Use “Add Equipment” to add the first item.
+                </td>
+              </tr>
+            )}
             {equipmentData.map((item, index) => (
               <tr key={item._id || index}>
                 <td className="text-center p-4">{index + 1}</td>
                 <td className="text-center p-4">{item.name}</td>
                 <td className="text-center p-4">{item.description}</td>
                 <td className="text-center p-4">{item.qty}</td>
-                <td className="text-center p-4">{item.amount || "$0.00"}</td>
+                <td className="text-center p-4">{item.amount ? `${CURRENCY}${item.amount}` : "—"}</td>
                 <td className="text-center p-4">{item.vendor}</td>
                 <td className="text-center p-4">{item.address}</td>
                 <td className="text-center p-4">{item.contact}</td>

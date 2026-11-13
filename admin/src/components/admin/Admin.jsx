@@ -1,4 +1,3 @@
-import React from "react";
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import DashBoard from "./DashBorad";
 import Equipment from "./Equipment";
@@ -9,6 +8,7 @@ import Annoucement from "./Annoucement";
 import StaffManagement from "./StaffManagement";
 import Reports from "./Reports";
 import { CiLogout } from "react-icons/ci";
+import { clearSession, getAdminProfile } from "../../lib/session";
 import MakeAnnouncement from "./Announcement/MakeAnnouncement";
 import ManageAnnouncement from "./Announcement/ManageAnnouncement";
 import StaffList from "./Staff/SatffList";
@@ -29,26 +29,21 @@ import { TbUsersGroup, TbUserSquareRounded } from "react-icons/tb";
 import { TfiAnnouncement } from "react-icons/tfi";
 import { RiUserStarLine } from "react-icons/ri";
 import { BsFileEarmarkBarGraph } from "react-icons/bs";
-import { GiProgression } from "react-icons/gi";
 
 const Admin = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Clear user-related data from localStorage
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    confirm('are you sure')
-
-    // Redirect user to the login page or home page
-    navigate("/");
+    if (!window.confirm("Are you sure you want to log out?")) return;
+    clearSession();
+    navigate("/", { replace: true });
   };
 
   return (
     <div className="h-screen flex bg-gray-100 p-6">
       {/* Sidebar */}
       <aside className="w-64 h-full bg-gray-800 text-white p-4 shadow-lg">
-        <h2 className="text-2xl font-bold mb-4">Settings</h2>
+        <h2 className="text-2xl font-bold mb-4">NeoGym Admin</h2>
         <nav>
           <ul>
             <li className="mb-2">
@@ -131,7 +126,7 @@ const Admin = () => {
       <main className="flex-1 h-full flex flex-col overflow-y-auto  bg-gray-100 shadow-inner space-y-2">
         <div className=" ml-1 border-0 space-x-1 flex ">
           <button  className="rounded-sm px-2 py-2 bg-slate-800 hover:bg-slate-900 border-0 text-white flex items-center gap-1">
-            <TbUserSquareRounded /> Welcome Admin
+            <TbUserSquareRounded /> Welcome {getAdminProfile()?.fullname || "Admin"}
           </button>
           <button onClick={handleLogout} className="bg-red-500 rounded-sm hover:bg-red-600 border-0 px-2 py-2 text-white  flex items-center gap-1">
             Logout <CiLogout className="ml-2" />

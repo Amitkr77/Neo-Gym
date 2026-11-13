@@ -1,11 +1,15 @@
 import mongoose from "mongoose";
-// Define the Task Schema
+
 const taskSchema = new mongoose.Schema(
   {
+    // Owning member. Not `required` so that legacy, owner-less tasks still load; the
+    // controller always sets it and scopes every query by it.
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Member', index: true },
     taskDesc: {
       type: String,
       required: [true, 'Task description is required'],
       minlength: [5, 'Task description must be at least 5 characters long'],
+      maxlength: [300, 'Task description must be at most 300 characters long'],
       trim: true,
     },
     taskStatus: {
@@ -14,13 +18,9 @@ const taskSchema = new mongoose.Schema(
       required: [true, 'Task status is required'],
       default: 'Pending',
     },
-
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// Create and export the Task model
 const Task = mongoose.model('Task', taskSchema);
 export default Task;

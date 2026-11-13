@@ -1,99 +1,72 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import axios from "axios";
+import FRONTEND_URL, { GYM_NAME } from "../../../constant/const";
+import { formatMoney } from "../../../lib/useGymData";
 
+const METHOD_LABELS = { cash: "Cash", upi: "UPI", card: "Card", bank_transfer: "Bank transfer", other: "Other" };
+
+// Receipt rendered from the saved payment record, with its persisted invoice number.
+// (Previously it showed a random invoice number on each render and another gym's name/address.)
 const PaymentReceipt = () => {
-  // Get the payment data passed from PaymentForm
-  const location = useLocation();
-  const paymentData = location.state?.data || {};
-  console.log(paymentData)
+  const [params] = useSearchParams();
+  const id = params.get("id");
+  const [payment, setPayment] = useState(null);
+  const [error, setError] = useState(id ? "" : "No payment selected.");
 
-  const {
-    member = {},
-    amountPaid = 0,
-    paymentDate = "",
-    chosenService = "",
-    plan = "",
-  } = paymentData;
+  useEffect(() => {
+    if (!id) return;
+    axios
+      .get(`${FRONTEND_URL}/api/payment/${id}`)
+      .then((res) => setPayment(res.data.payment))
+      .catch((err) => setError(err.response?.status === 404 ? "Payment not found." : "Could not load this receipt."));
+  }, [id]);
 
-  const { fullName = "" } = member;
+  if (error) {
+    return (
+      <div className="p-6">
+        <p className="text-red-600 mb-4">{error}</p>
+        <Link to="/admin/payment/MemberPaymentTable" className="text-blue-600 underline">Back to payments</Link>
+      </div>
+    );
+  }
+  if (!payment) return <p className="p-6 text-gray-600" role="status">Loading receipt…</p>;
 
-  // Generate a random invoice number
-  const generateInvoiceNumber = () => {
-    const randomNum = Math.floor(Math.random() * 10000000); // Generate a random number
-    return `GMS_${randomNum}`;
-  };
-
-  // Format the current date (for Paid On section)
-  const currentDate = new Date().toLocaleString();
-
-  // Format the payment date (Last Payment section)
-  const formattedPaymentDate = paymentDate
-    ? new Date(paymentDate).toLocaleDateString()
-    : "";
-
-  // Determine the Valid Upto based on the plan
-  const getValidUpto = () => {
-    switch (plan) {
-      case "basic":
-        return "1 Month/s";
-      case "standard":
-        return "3 Month/s";
-      case "premium":
-        return "12 Month/s";
-      default:
-        return "N/A";
-    }
-  };
+  const memberName = payment.member?.fullName || payment.memberName || "Deleted member";
 
   return (
-    <div className="content p-8 bg-white shadow-lg rounded-lg max-w-2xl mx-auto">
-      <h3 className="text-3xl font-bold text-center mb-6">Payment Receipt</h3>
-      <div className="flex justify-between text-sm mb-4">
+    <div className="p-8 bg-white shadow rounded-lg max-w-2xl mx-auto print:shadow-none">
+      <h1 className="text-3xl font-bold text-center mb-1">{GYM_NAME}</h1>
+      <p className="text-center text-gray-600 mb-6">Payment receipt</p>
+
+      <div className="flex flex-wrap justify-between gap-2 text-sm mb-6">
         <div>
-          <p className="font-medium">Invoice #{generateInvoiceNumber()}</p>
-          <p>5021 Wetzel Lane,</p>
-          <p>Williamsburg</p>
+          <p className="font-medium">Invoice # {payment.invoiceNumber || "— (recorded before invoice numbering)"}</p>
+          <p>Paid on: {new Date(payment.paymentDate).toLocaleDateString("en-GB")}</p>
         </div>
-        <div className="text-right">
-          <p>Last Payment: {formattedPaymentDate}</p>
+        <div className="sm:text-right">
+          <p className="font-medium">Member: {memberName}</p>
+          {payment.member?.username && <p>@{payment.member.username}</p>}
+          {payment.member?.contactNumber && <p>{payment.member.contactNumber}</p>}
         </div>
       </div>
-      <div className="text-center mb-4">
-        <p className="text-lg font-semibold">Member: {fullName}</p>
-        <p>Paid On: {currentDate}</p>
-      </div>
-      <table className="w-full border border-gray-300 mb-4">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 text-left">Service Taken</th>
-            <th className="p-2 text-right">Valid Upto</th>
-          </tr>
-        </thead>
+
+      <table className="w-full border border-gray-300 mb-4 text-sm">
         <tbody>
-          <tr>
-            <td className="p-2 border-t">{chosenService}</td>
-            <td className="p-2 border-t text-right">{getValidUpto()}</td>
-          </tr>
-          <tr>
-            <td className="p-2 border-t">Charge Per Month</td>
-            <td className="p-2 border-t text-right">${amountPaid}</td>
-          </tr>
-          <tr className="bg-gray-100">
-            <td className="p-2 border-t font-semibold">Total Amount</td>
-            <td className="p-2 border-t text-right font-semibold">${amountPaid}</td>
-          </tr>
+          <tr><th className="p-2 text-left bg-gray-50 w-1/2">Service</th><td className="p-2">{payment.chosenService || "—"}</td></tr>
+          <tr><th className="p-2 text-left bg-gray-50">Plan</th><td className="p-2 capitalize">{payment.plan || "—"}</td></tr>
+          <tr><th className="p-2 text-left bg-gray-50">Payment method</th><td className="p-2">{METHOD_LABELS[payment.method] || "—"}</td></tr>
+          {payment.note && <tr><th className="p-2 text-left bg-gray-50">Note</th><td className="p-2">{payment.note}</td></tr>}
+          <tr className="bg-gray-100 font-semibold"><th className="p-2 text-left">Total paid</th><td className="p-2">{formatMoney(payment.amountPaid)}</td></tr>
         </tbody>
       </table>
-      <p className="text-center mt-4 text-sm">
-        We sincerely appreciate your promptness regarding all payments from your side.
-      </p>
-      <div className="mt-6 text-center">
-        <button
-          className="bg-red-500 text-white py-2 px-4 rounded shadow hover:bg-red-600 transition duration-200"
-          onClick={() => window.print()}
-        >
-          <i className="fas fa-print mr-2"></i> Print
+
+      <p className="text-center mt-4 text-sm text-gray-600">Thank you for your payment.</p>
+      <div className="mt-6 flex justify-center gap-3 print:hidden">
+        <button className="bg-slate-800 text-white py-2 px-4 rounded hover:bg-slate-900" onClick={() => window.print()}>
+          Print
         </button>
+        <Link to="/admin/payment/MemberPaymentTable" className="py-2 px-4 rounded border hover:bg-gray-50">Back to payments</Link>
       </div>
     </div>
   );

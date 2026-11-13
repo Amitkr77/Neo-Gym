@@ -1,20 +1,12 @@
-// routes/announcementRoutes.js
 import express from 'express';
-import {
-    createAnnouncement,
-    getAllAnnouncements,
-    deleteAnnouncement,
-} from '../controllers/announcementController.js';
+import { createAnnouncement, getAllAnnouncements, deleteAnnouncement } from '../controllers/announcementController.js';
+import { requireAdmin } from '../middleware/auth.js';
+import { validateObjectId } from '../middleware/validate.js';
 
 const router = express.Router();
 
-// Route to get all announcements
-router.get('/', getAllAnnouncements);
-
-// Route to create a new announcement
-router.post('/', createAnnouncement);
-
-// Route to delete an announcement by ID
-router.delete('/:id', deleteAnnouncement);
+router.get('/', getAllAnnouncements); // public notices
+router.post('/', requireAdmin, createAnnouncement);
+router.delete('/:id', requireAdmin, validateObjectId(), deleteAnnouncement);
 
 export default router;

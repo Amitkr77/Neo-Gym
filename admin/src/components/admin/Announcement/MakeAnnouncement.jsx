@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import FRONTEND_URL from "../../../constant/const";
@@ -26,7 +26,7 @@ const MakeAnnouncement = () => {
 
     try {
       // Step 3: Send POST request using Axios
-      const response = await axios.post(
+      await axios.post(
         `${FRONTEND_URL}/api/announcement`,
         data
       );
@@ -35,7 +35,7 @@ const MakeAnnouncement = () => {
       setSuccessMessage("Announcement published successfully!");
       setMessage(""); // Reset form
       setAppliedDate(""); // Reset form
-    } catch (err) {
+    } catch {
       // Handle errors
       setError("There was an error while submitting your announcement.");
     } finally {

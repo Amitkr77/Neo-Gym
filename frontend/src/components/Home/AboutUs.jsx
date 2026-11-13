@@ -1,89 +1,50 @@
-import React, { useEffect } from "react";
-import AOS from "aos"; // Importing AOS for scroll animations
-import "aos/dist/aos.css"; // Import AOS CSS
-import { FaDumbbell, FaCogs, FaRunning } from "react-icons/fa"; // Importing icons
+import SectionHeading from "../ui/SectionHeading";
+import Reveal from "../ui/Reveal";
 
-const AboutUs = () => {
-  useEffect(() => {
-    AOS.init({
-      duration: 1200, // Animation duration
-      easing: "ease-out-quart", // Smoother easing
-      once: true, // Trigger animation only once
-    });
-  }, []);
+const PILLARS = [
+  {
+    title: "Expert trainers",
+    body: "Our trainers guide you through personalized workout plans tailored to your goals, whether you are just starting out or levelling up.",
+  },
+  {
+    title: "Modern equipment",
+    body: "Equipped with the latest fitness machines and tools, our gym gives you everything you need to train well.",
+  },
+  {
+    title: "Variety of classes",
+    body: "From yoga to high-intensity intervals, a wide range of sessions keeps you challenged and motivated.",
+  },
+];
 
-  return (
-    <section className="py-20 px-8 bg-[#F3F4F6]" id="about">
-      <div className="max-w-screen-xl mx-auto text-center">
-        <h2
-          className="text-5xl font-extrabold text-[#1E3A8A] mb-8 tracking-tight leading-tight"
-          data-aos="fade-up"
-        >
-          About Us
-        </h2>
-        <p
-          className="text-lg text-[#374151] mb-16 max-w-3xl mx-auto leading-relaxed opacity-80"
-          data-aos="fade-up"
-          data-aos-delay="300"
-        >
-          Our mission is to empower you to achieve your fitness goals in a
-          welcoming and inspiring environment. With expert trainers,
-          cutting-edge equipment, and diverse classes, we’re committed to your
-          success every step of the way.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          <div
-            className="bg-white p-10 rounded-xl shadow-xl transform transition-all duration-500 hover:scale-105 hover:shadow-2xl  hover:text-white"
-            data-aos="fade-up"
-          >
-            <div className="text-4xl text-[#070B15] mb-4">
-              <FaDumbbell />
-            </div>
-            <h3 className="text-3xl font-semibold text-[#1E3A8A] mb-5">
-              Expert Trainers
-            </h3>
-            <p className="text-[#374151]">
-              Our trainers are certified professionals, ready to guide you
-              through personalized workout plans tailored to your goals.
-            </p>
-          </div>
-          <div
-            className="bg-white p-10 rounded-xl shadow-xl transform transition-all duration-500 hover:scale-105 hover:shadow-2xl  hover:text-white"
-            data-aos="fade-up"
-            data-aos-delay="200"
-          >
-            <div className="text-4xl text-[#070B15] mb-4">
-              <FaCogs />
-            </div>
-            <h3 className="text-3xl font-semibold text-[#1E3A8A] mb-5">
-              State-of-the-Art Equipment
-            </h3>
-            <p className="text-[#374151]">
-              Equipped with the latest fitness machines and tools, our gym
-              ensures you have everything you need to achieve your best.
-            </p>
-          </div>
-          <div
-            className="bg-white p-10 rounded-xl shadow-xl transform transition-all duration-500 hover:scale-105 hover:shadow-2xl  hover:text-white"
-            data-aos="fade-up"
-            data-aos-delay="400"
-          >
-            <div className="text-4xl text-[#070B15] mb-4">
-              <FaRunning />
-            </div>
-            <h3 className="text-3xl font-semibold text-[#1E3A8A] mb-5">
-              Variety of Classes
-            </h3>
-            <p className="text-[#374151]">
-              From Yoga to HIIT, we offer a wide range of classes to challenge
-              you and keep you motivated.
-            </p>
-          </div>
+// Home: "Why NeoGym" — mission statement plus three pillars.
+const AboutUs = () => (
+  <section id="about" className="bg-bone py-24 sm:py-32">
+    <div className="container-x">
+      <div className="grid gap-12 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <SectionHeading index="01" eyebrow="Why NeoGym" title="Built for" accent="progress." />
         </div>
+        <Reveal className="lg:col-span-5 lg:pt-14" delay={120}>
+          <p className="lead text-stone-600">
+            Our mission is to help you reach your fitness goals in a welcoming, motivating environment,
+            with coaching, equipment and classes that support you every step of the way.
+          </p>
+        </Reveal>
       </div>
-    </section>
-  );
-};
+
+      <ol className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-ink/10 bg-ink/10 sm:mt-20 lg:grid-cols-3">
+        {PILLARS.map((pillar, i) => (
+          <Reveal as="li" key={pillar.title} delay={i * 90} className="group bg-bone-50 p-7 transition-colors duration-500 hover:bg-white sm:grid sm:grid-cols-[5rem_1fr] sm:gap-x-6 sm:p-10 lg:block">
+            <span className="font-serif text-5xl italic leading-none text-ember-600">0{i + 1}</span>
+            <div>
+              <h3 className="display-sm mt-6 text-xl sm:mt-1 lg:mt-10">{pillar.title}</h3>
+              <p className="mt-4 max-w-prose leading-relaxed text-stone-600">{pillar.body}</p>
+            </div>
+          </Reveal>
+        ))}
+      </ol>
+    </div>
+  </section>
+);
 
 export default AboutUs;

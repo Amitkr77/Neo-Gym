@@ -1,4 +1,3 @@
-import React from 'react'
 import MembersProgressTable from './Progress/MemberProgress'
 import ProgressForm from './Progress/ProgressForm'
 import ProgressUpdatedMessage from './Progress/ProgressUpdatedMessage'
